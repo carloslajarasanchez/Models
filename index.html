@@ -1,0 +1,101 @@
+<html>
+  <head>
+	<title>A-Frame</title>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+	<script src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
+	<script>
+		AFRAME.registerComponent('cambiar-tamano' , {
+			init:function(){
+				this.el.addEventListener('click', () => {
+				debugger;
+				const nuevoTamano = Math.random() + 0.5;
+				this.el.setAttribute('scale', `${nuevoTamano}  ${nuevoTamano} ${nuevoTamano}`); 
+				});
+			}
+		});
+		AFRAME.registerComponent('cambiar-color' , {
+			init:function(){
+				this.el.addEventListener('click', () => {
+				debugger;
+				const colorNuevo = '#FAFAFA';
+				this.el.setAttribute('material','color', colorNuevo); 
+				});
+			}
+		});	
+		AFRAME.registerComponent('animation' , {
+			init:function(){
+				this.el.addEventListener('click', () => {
+					debugger;
+					const colorNuevo = '#FAFAFA';
+					this.el.setProperty('material','color', colorNuevo); 
+				});
+			}
+		});	
+
+        AFRAME.registerComponent('cambiar-color-Model', {
+            init: function () {
+                this.el.addEventListener('click', () => {
+                    const colorNuevo = new THREE.Color('#FFFF00');
+                    const mesh = this.el.getObject3D('mesh');
+                    if (!mesh) return;
+                    mesh.traverse((node) => {
+                        if (node.isMesh) {
+                            node.material = new THREE.MeshStandardMaterial({ color: colorNuevo });
+                        }
+                    });
+                });
+            }
+        });
+	</script>
+  </head>
+  <body>
+	  <a-scene>
+		  <a-assets>
+	   <a-asset-item id="Edificio1" src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
+
+	 </a-assets>
+		  <a-entity environment="preset: forest">
+			  <a-entity gltf-model="#Edificio1"
+				  position="5 0 0"
+				  rotation="0 90 0"
+				  scale="1 1 1" class="clickable" cambiar-color-Model>
+			  </a-entity>
+			  <a-entity gltf-model="#my-model"></a-entity>
+			  <a-box position="-1 0.5 -3" rotation="0 0 0" height="0.5" width=".5" src="https://media.istockphoto.com/id/1410017441/es/vector/dise%C3%B1o-de-pared-de-piedra-para-patr%C3%B3n-y-fondo-ilustraci%C3%B3n-vectorial.jpg?s=612x612&w=0&k=20&c=fXLdBP6128aHNFjrLXX_Mh-BQ3JCvlqH161-d4nVFOw=" class="clickable" cambiar-tamano></a-box>
+
+			  <!--<a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E" class="clickable" cambiar-color></a-sphere>-->
+			  <!--<a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>-->
+			  <a-entity id="mouseCursor" cursor="rayOrigin: mouse"></a-entity>
+
+			  <a-entity geometry="primitive: box"
+				  material="color: red"
+				  animation__mouseenter="property: components.material.material.color; type: color; to: blue; startEvents: mouseenter; dur: 500" ;
+				  animation__mouseleave="property: components.material.material.color; type: color; to: red; startEvents: mouseleave; dur: 500" ;
+				  animation__customevent="property: components.material.material.color; type: color; from: red; to: blue; startEvents: triggeranimation; dur: 500" ;>
+			  </a-entity>
+
+			  <a-box position="-2 1.5 -4"
+			   color="#4CC3D9"
+			   animation__moveright="property: position;
+							to: 2 1.5 -4;
+							dur: 2000;
+							easing: easeInOutSine;
+							startEvents: click;
+							dir: normal;"
+			   animation__moveleft="property: position;
+						   to: -2 1.5 -4;
+						   dur: 2000;
+						   easing: easeInOutSine;
+						   startEvents: animationcomplete__moveright;">
+			  </a-box>
+
+			  <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
+			  <!-- <a-light type="ambient" color="#ffffff"></a-light> -->
+			  <a-sky color="#ECECEC"></a-sky>
+			  <a-camera position="0 1.6 0">
+				  <a-cursor raycaster="objects: .clickable"></a-cursor>
+			  </a-camera>
+		  </a-entity>
+	  </a-scene>
+  </body>
+</html>

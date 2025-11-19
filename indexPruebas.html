@@ -1,0 +1,156 @@
+﻿<html>
+<head>
+	<script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+	<script src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
+	<script>
+        AFRAME.registerComponent('encender-ventanas', {
+            init: function () {
+                this.encendidas = false;
+                this.colorOriginal = null;
+
+                this.el.addEventListener('click', () => {
+                    this.toggleLuces();
+                });
+            },
+
+            // ← Método que enciende/apaga luces desde fuera (botón)
+            setLuces: function (estado) {
+                if (estado === this.encendidas) return; // ya está en ese estado
+                this.toggleLuces();
+            },
+
+            toggleLuces: function () {
+                const mesh = this.el.getObject3D('mesh');
+                if (!mesh) return;
+
+                mesh.traverse((node) => {
+                    if (node.isMesh && node.name === 'Ventanas') {
+
+                        if (!this.colorOriginal) {
+                            this.colorOriginal = node.material.color.clone();
+                        }
+
+                        if (this.encendidas) {
+                            node.material.color.copy(this.colorOriginal);
+                            node.material.emissive.set('#000000');
+                            node.material.emissiveIntensity = 0;
+                        } else {
+                            node.material.color.set('#FFD700');
+                            node.material.emissive.set('#FFD700');
+                            node.material.emissiveIntensity = 1.5;
+                        }
+
+                        node.material.needsUpdate = true;
+                    }
+                });
+
+                this.encendidas = !this.encendidas;
+            }
+        });
+
+        /*AFRAME.registerComponent('boton-luces', {
+            init: function () {
+                this.lucesEncendidas = false;
+
+                this.el.addEventListener('click', () => {
+                    this.lucesEncendidas = !this.lucesEncendidas;
+
+                    const casas = document.querySelectorAll('[encender-ventanas]');
+                    casas.forEach(casa => {
+                        casa.components['encender-ventanas'].setLuces(this.lucesEncendidas);
+                    });
+
+                    this.el.setAttribute('material', 'color',
+                        this.lucesEncendidas ? '#FFD700' : '#333');
+                });
+            }
+        });*/
+        AFRAME.registerComponent('boton-luces', {
+            init: function () {
+                this.lucesEncendidas = false;
+
+                this.el.addEventListener('click', () => {
+                    this.lucesEncendidas = !this.lucesEncendidas;
+
+                    // Encender ventanas
+                    const casas = document.querySelectorAll('[encender-ventanas]');
+                    casas.forEach(casa => {
+                        casa.components['encender-ventanas'].setLuces(this.lucesEncendidas);
+                    });
+
+                    // Cambiar color botón
+                    this.el.setAttribute('material', 'color',
+                        this.lucesEncendidas ? '#FFD700' : '#333');
+
+                    // CAMBIAR CIELO (día ↔ noche)
+                    const entorno = document.querySelector('#entorno');
+
+                    if (this.lucesEncendidas) {
+                        // NOCHE
+                        entorno.setAttribute('environment', {
+                            preset: 'forest',
+                            lighting: 'dusk',
+                            skyType: 'color',
+                            skyColor: '#0a0a1a',   // azul muy oscuro
+                            horizonColor: '#1a1a2a',
+                            fog: 0.7
+                        });
+                    } else {
+                        // DÍA
+                        entorno.setAttribute('environment', {
+                            preset: 'forest',
+                            lighting: 'sunset',
+                            skyType: 'color',
+                            skyColor: '#88ccee',
+                            horizonColor: '#ffffff',
+                            fog: 0.2
+                        });
+                    }
+                });
+            }
+        });
+	</script>
+</head>
+<body>
+    <a-scene>
+        <a-assets>
+            <a-asset-item id="Edificio1" src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
+            <a-asset-item id="Edificio2" src="https://carloslajarasanchez.github.io/Models/Edificio2.glb"></a-asset-item>
+        </a-assets>
+
+        <!----------ENVIRONMENT---------->
+        <a-entity id="entorno" environment="preset: forest; ground:canyon ; playArea: 10000; groundTexture: walkernoise" ></a-entity>
+
+        <!----------EDIFICIOS---------->
+        <a-entity gltf-model="#Edificio1"
+                  position="0 0 -15"
+                  rotation="0 90 0"
+                  scale="2 2 2"
+                  class="clickable"
+                  encender-ventanas>
+        </a-entity>
+
+        <a-entity gltf-model="#Edificio2"
+                  position="0 0 15"
+                  rotation="0 90 0"
+                  scale="2 2 2"
+                  class="clickable"
+                  encender-ventanas>
+        </a-entity>
+
+        <!----------INTERRUPTORES---------->
+        <a-box position="0 1 -2"
+               depth="0.2" height="0.2" width="0.2"
+               color="#333"
+               class="clickable"
+               boton-luces>
+        </a-box>
+
+        <!----------CAMARA---------->
+        <a-camera position="0 1.6 0">
+            <a-cursor raycaster="objects: .clickable"></a-cursor>
+        </a-camera>
+
+    </a-scene>
+</body>
+</html>

@@ -1,0 +1,192 @@
+﻿<html>
+<head>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
+
+    <script>
+        // ==========================
+        //   COMPONENTE: Encender ventanas
+        // ==========================
+        AFRAME.registerComponent('encender-ventanas', {
+            init: function () {
+                this.encendidas = false;
+                this.colorOriginal = null;
+
+                this.luzInterior = null; // ← luz que se creará dentro del edificio
+
+                this.el.addEventListener('click', () => {
+                    this.toggleLuces();
+                });
+            },
+
+            setLuces: function (estado) {
+                if (estado === this.encendidas) return;
+                this.toggleLuces();
+            },
+
+            toggleLuces: function () {
+                const mesh = this.el.getObject3D('mesh');
+                if (!mesh) return;
+
+                mesh.traverse((node) => {
+                    if (node.isMesh && node.name === 'Ventanas') {
+
+                        if (!this.colorOriginal) {
+                            this.colorOriginal = node.material.color.clone();
+                        }
+
+                        if (this.encendidas) {
+                            // APAGAR
+                            node.material.color.copy(this.colorOriginal);
+                            node.material.emissive.set('#000000');
+                            node.material.emissiveIntensity = 0;
+                        } else {
+                            // ENCENDER
+                            node.material.color.set('#FFD700');
+                            node.material.emissive.set('#FFD700');
+                            node.material.emissiveIntensity = 1.5;
+                        }
+
+                        node.material.needsUpdate = true;
+                    }
+                });
+
+                // ==========================
+                //   ENCENDER / APAGAR LUZ INTERIOR
+                // ==========================
+                if (!this.encendidas) {
+                    // Crear luz si no existe
+                    this.luzInterior = document.createElement('a-entity');
+                    this.luzInterior.setAttribute('light', {
+                        type: 'point',
+                        color: '#FFD700',
+                        intensity: 2,
+                        distance: 20
+                    });
+
+                    // Posición aproximada dentro del edificio
+                    this.luzInterior.setAttribute('position', '0 5 0');
+
+                    this.el.appendChild(this.luzInterior);
+                } else {
+                    // Eliminar luz al apagar
+                    if (this.luzInterior) {
+                        this.el.removeChild(this.luzInterior);
+                        this.luzInterior = null;
+                    }
+                }
+
+                this.encendidas = !this.encendidas;
+            }
+        });
+
+        // ==========================
+        //   COMPONENTE: Botón general
+        // ==========================
+        AFRAME.registerComponent('boton-luces', {
+            init: function () {
+                this.lucesEncendidas = false;
+
+                this.entorno = document.querySelector('#entorno');
+
+                this.el.addEventListener('click', () => {
+                    this.lucesEncendidas = !this.lucesEncendidas;
+
+                    // Encender/apagar edificios
+                    const casas = document.querySelectorAll('[encender-ventanas]');
+                    casas.forEach(casa => {
+                        casa.components['encender-ventanas'].setLuces(this.lucesEncendidas);
+                    });
+
+                    // Cambiar color del botón
+                    this.el.setAttribute('material', 'color',
+                        this.lucesEncendidas ? '#FFD700' : '#333');
+
+                    // ==========================
+                    //   CAMBIO DE CIELO (DÍA ↔ NOCHE)
+                    // ==========================
+                    if (this.lucesEncendidas) {
+                        // NOCHE
+                        this.entorno.setAttribute('environment', {
+                            preset: 'starry',        // mantiene tu entorno
+                            skyType: 'atmosphere',   // necesario para estrellas
+                            lighting: 'dusk',
+                            stars: 5000,             // cantidad de estrellas (default del preset)
+                            starColor: '#ffffff',
+                            horizonColor: '#0a0a0a',
+                            skyColor: '#000010',
+                            fog: 0.6
+                        });
+                    } else {
+                        // DÍA
+                        this.entorno.setAttribute('environment', {
+                            preset: 'starry',
+                            lighting: 'sunset',
+                            skyType: 'color',
+                            skyColor: '#88ccee',
+                            horizonColor: '#ffffff',
+                            stars: 0,        // desactivar estrellas
+                            fog: 0.2
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <a-scene>
+        <!-- Assets -->
+        <a-assets>
+            <a-asset-item id="Edificio1" src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
+            <a-asset-item id="Edificio2" src="https://carloslajarasanchez.github.io/Models/Edificio2.glb"></a-asset-item>
+        </a-assets>
+
+        <!-- Entorno con ID -->
+        <a-entity id="entorno" environment="
+                  preset: starry;
+                  lighting: sunset;
+                  skyType: color;
+                  skyColor: #88ccee;
+                  horizonColor: #ffffff;
+                  groundTexture: walkernoise;
+                  groundColor: #666666;
+                  groundColor2: #515151;
+                  dressing: towers;
+                  dressingScale: 100;
+                  dressingAmount: 2;
+                  dressingColor: #3c3c3c;
+                  playArea: 100;
+                  grid: none;
+                  "></a-entity>
+
+        <!-- Edificios -->
+        <a-entity gltf-model="#Edificio1"
+                  position="0 0 -15"
+                  rotation="0 90 0"
+                  scale="2 2 2"
+                  class="clickable"
+                  encender-ventanas></a-entity>
+
+        <a-entity gltf-model="#Edificio2"
+                  position="0 0 15"
+                  rotation="0 90 0"
+                  scale="2 2 2"
+                  class="clickable"
+                  encender-ventanas></a-entity>
+
+        <!-- Botón -->
+        <a-box position="0 1 -2"
+               depth="0.2" height="0.2" width="0.2"
+               color="#333"
+               class="clickable"
+               boton-luces></a-box>
+
+        <!-- Cámara -->
+        <a-camera position="0 1.6 0">
+            <a-cursor raycaster="objects: .clickable"></a-cursor>
+        </a-camera>
+    </a-scene>
+</body>
+</html>
