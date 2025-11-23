@@ -141,6 +141,7 @@
         <a-assets>
             <a-asset-item id="Edificio1" src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
             <a-asset-item id="Edificio2" src="https://carloslajarasanchez.github.io/Models/Edificio2.glb"></a-asset-item>
+            <a-asset-item id="CentroPokemon" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/CentroPokemon.glb"></a-asset-item>
         </a-assets>
 
         <!-- Entorno con ID -->
@@ -162,19 +163,21 @@
                   "></a-entity>
 
         <!-- Edificios -->
-        <a-entity gltf-model="#Edificio1"
+        <a-entity gltf-model="#CentroPokemon"
                   position="0 0 -15"
-                  rotation="0 90 0"
+                  rotation="0 -90 0"
                   scale="2 2 2"
                   class="clickable"
-                  encender-ventanas></a-entity>
+                  encender-ventanas>
+        </a-entity>
 
         <a-entity gltf-model="#Edificio2"
                   position="0 0 15"
                   rotation="0 90 0"
                   scale="2 2 2"
                   class="clickable"
-                  encender-ventanas></a-entity>
+                  encender-ventanas>
+        </a-entity>
 
         <!-- Botón -->
         <a-box position="0 1 -2"
