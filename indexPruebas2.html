@@ -2,7 +2,7 @@
 <head>
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v5.0.0/dist/aframe-physics-system.min.js"></script>
     <script>
         // ==========================
         //   COMPONENTE: Encender ventanas
@@ -186,18 +186,80 @@
                 });
             }
         });
+
+        AFRAME.registerComponent('generar-linea-arboles', {
+            schema: {
+                cantidad: { type: 'number', default: 10 },
+                distancia: { type: 'number', default: 5 },
+                direccion: { type: 'vec3', default: { x: 0, y: 0, z: 1 } },
+            },
+
+            init: function () {
+                const sceneEl = this.el.sceneEl;
+                const inicio = this.el.getAttribute('position');
+
+                for (let i = 1; i <= this.data.cantidad; i++) {
+                    const arbol = document.createElement('a-entity');
+
+                    // Copiar el modelo del árbol original
+                    const modelo = this.el.getAttribute('gltf-model');
+                    arbol.setAttribute('gltf-model', modelo);
+
+                    // Posición del árbol
+                    const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
+                    const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
+                    const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
+                    arbol.setAttribute('position', `${posX} ${posY} ${posZ}`);
+
+                    // Rotación aleatoria opcional
+                    arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
+
+                    // Escala
+                    const escala = this.el.getAttribute('scale');
+                    arbol.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
+
+                    sceneEl.appendChild(arbol);
+
+                    // -----------------------------
+                    // Añadir colisión invisible
+                    // -----------------------------
+                    const colision = document.createElement('a-box');
+
+                    colision.setAttribute('position', `${posX} ${posY + escala.y / 2} ${posZ}`);
+                    colision.setAttribute('width', escala.x);
+                    colision.setAttribute('height', escala.y);
+                    colision.setAttribute('depth', escala.z);
+                    colision.setAttribute('visible', 'false');          // invisible
+                    colision.setAttribute('static-body', '');           // cuerpo estático para colisiones
+
+                    sceneEl.appendChild(colision);
+                }
+            }
+        });
     </script>
 </head>
 
 <body>
-    <a-scene>
+    <a-scene physics="gravity: -9.8; debug: false">
         <!-- Assets -->
         <a-assets>
             <a-asset-item id="Edificio1" src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
             <a-asset-item id="Edificio2" src="https://carloslajarasanchez.github.io/Models/Edificio2.glb"></a-asset-item>
             <a-asset-item id="CentroPokemon" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/CentroPokemon.glb"></a-asset-item>
             <a-asset-item id="TiendaPokemon" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/TiendaPokemon.glb"></a-asset-item>
+            <a-asset-item id="Arbol" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Arbol.glb"></a-asset-item>
         </a-assets>
+
+        <!-- Player -->
+        <a-entity id="jugador" camera wasd-controls look-controls
+                  position="0 1.6 0"
+                  dynamic-body>
+        </a-entity>
+
+        <!-- Cámara -->
+        <a-camera position="0 1.6 10">
+            <a-cursor raycaster="objects: .clickable"></a-cursor>
+        </a-camera>
 
         <!-- Entorno con ID -->
         <a-entity id="entorno" environment="
@@ -217,7 +279,8 @@
                   dressingColor: #3c3c3c;
                   playArea: 100;
                   grid: none;
-                  "></a-entity>
+                  ">
+        </a-entity>
 
         <!-- Edificios -->
         <a-entity gltf-model="#CentroPokemon"
@@ -238,12 +301,12 @@
                   encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#Edificio2"
+        <!-- Arboles -->
+        <a-entity gltf-model="#Arbol"
                   position="0 0 15"
                   rotation="0 90 0"
                   scale="2 2 2"
-                  class="clickable"
-                  encender-ventanas>
+                  generar-linea-arboles="cantidad: 9; distancia: 5; direccion: 1 0 0">
         </a-entity>
 
         <!-- Botón -->
@@ -251,12 +314,10 @@
                depth="0.2" height="0.2" width="0.2"
                color="#333"
                class="clickable"
-               boton-luces></a-box>
+               boton-luces>
+        </a-box>
 
-        <!-- Cámara -->
-        <a-camera position="0 1.6 0">
-            <a-cursor raycaster="objects: .clickable"></a-cursor>
-        </a-camera>
+
     </a-scene>
 </body>
 </html>
