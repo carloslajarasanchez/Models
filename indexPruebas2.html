@@ -60,12 +60,12 @@
                     this.luzInterior.setAttribute('light', {
                         type: 'point',
                         color: '#FFD700',
-                        intensity: 2,
+                        intensity: 10,
                         distance: 20
                     });
 
                     // Posición aproximada dentro del edificio
-                    this.luzInterior.setAttribute('position', '0 5 0');
+                    this.luzInterior.setAttribute('position', '4 5 0');
 
                     this.el.appendChild(this.luzInterior);
                 } else {
@@ -81,7 +81,7 @@
         });
 
         // ==========================
-        //   COMPONENTE: Botón general
+        //   COMPONENTE: Botón general luces
         // ==========================
         AFRAME.registerComponent('boton-luces', {
             init: function () {
@@ -132,6 +132,31 @@
                 });
             }
         });
+
+        // ==========================
+        //   COMPONENTE: Rotar cartel
+        // ==========================
+        AFRAME.registerComponent('rotar-cartel', {
+            schema: {
+                speed: {type: 'number', default: 30}   // grados por segundo
+            },
+
+            tick: function (time, timeDelta) {
+                const mesh = this.el.getObject3D('mesh');
+                if (!mesh) return;
+
+                mesh.traverse((node) => {
+                    if (node.isMesh && node.name === 'Cartel') {
+
+                        // Convertir velocidad a radianes por milisegundo
+                        const radians = THREE.MathUtils.degToRad(this.data.speed) * (timeDelta / 1000);
+
+                        // Girar sobre su propio eje Y
+                        node.rotation.y += radians;
+                    }
+                });
+            }
+        });
     </script>
 </head>
 
@@ -142,12 +167,15 @@
             <a-asset-item id="Edificio1" src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
             <a-asset-item id="Edificio2" src="https://carloslajarasanchez.github.io/Models/Edificio2.glb"></a-asset-item>
             <a-asset-item id="CentroPokemon" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/CentroPokemon.glb"></a-asset-item>
+            <a-asset-item id="TiendaPokemon" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/TiendaPokemon.glb"></a-asset-item>
         </a-assets>
 
         <!-- Entorno con ID -->
         <a-entity id="entorno" environment="
                   preset: starry;
                   lighting: sunset;
+                  lightPosition: 0 0 1;
+                  shadow: true;
                   skyType: color;
                   skyColor: #88ccee;
                   horizonColor: #ffffff;
@@ -167,6 +195,15 @@
                   position="0 0 -15"
                   rotation="0 -90 0"
                   scale="2 2 2"
+                  class="clickable"
+                  encender-ventanas>
+        </a-entity>
+
+        <a-entity gltf-model="#TiendaPokemon"
+                  position="20 0 -15"
+                  rotation="0 -90 0"
+                  scale="2 2 2"
+                  rotar-cartel="speed: 45"
                   class="clickable"
                   encender-ventanas>
         </a-entity>
