@@ -1,0 +1,111 @@
+<html>
+
+<head>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script
+        src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
+    <script src="aframe-physics-system.min.js"></script>
+    <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+
+    <!--<script src="https://unpkg.com/super-hands@3.0.3/dist/super-hands.min.js"></script>-->
+
+
+
+
+
+
+    <script>
+        AFRAME.registerComponent('pokeball-logic', {
+            init: function () {
+                this.el.addEventListener('collide', (e) => {
+                    const target = e.detail.body.el;
+                    if (target && target.classList.contains('pokemon')) {
+                        target.setAttribute('animation-mixer', 'clip: Capturado; loop: once');
+                    }
+                });
+            }
+        });
+
+        AFRAME.registerComponent('cursor-grab', {
+            init: function () {
+                this.el.addEventListener('click', (e) => {
+                    const intersected = e.detail.intersectedEl;
+                    if (intersected && intersected.classList.contains('clickable')) {
+                        // Si la bola está en el suelo, la coges delante de la cámara
+                        if (!intersected.isGrabbed) {
+                            intersected.isGrabbed = true;
+                            intersected.removeAttribute('dynamic-body'); // quitas físicas mientras está agarrada
+                            intersected.setAttribute('parent', '#camera'); // la pegas a la cámara
+                            intersected.setAttribute('position', '0 5 -1');
+                            
+                        } else {
+                            // Si ya está agarrada, la sueltas/lanzas
+                            intersected.isGrabbed = false;
+                            intersected.removeAttribute('parent');
+                            intersected.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
+                            // darle impulso hacia delante
+                            intersected.body.velocity.set(0, 2, -5);
+                        }
+                    }
+                });
+            }
+        });
+
+
+
+    </script>
+</head>
+
+<body>
+    <a-scene physics="gravity: -9.8; debug: true">
+        <a-assets>
+            <a-asset-item id="pokeball"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Pokeball.glb"></a-asset-item>
+            <a-asset-item id="pikachu"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Totodile.glb"></a-asset-item>
+        </a-assets>
+        <a-camera id="camera" position="0 1.6 0" look-controls>
+            <a-cursor fuse="false" raycaster="objects: .clickable" cursor-grab></a-cursor>
+        </a-camera>
+
+
+
+
+        <!-- Entorno con ID -->
+        <a-entity id="entorno" environment="
+                  preset: starry;
+                  lighting: sunset;
+                  lightPosition: 0 0 1;
+                  shadow: true;
+                  skyType: color;
+                  skyColor: #88ccee;
+                  horizonColor: #ffffff;
+                  groundTexture: walkernoise;
+                  groundColor: #666666;
+                  groundColor2: #515151;
+                  dressing: towers;
+                  dressingScale: 100;
+                  dressingAmount: 2;
+                  dressingColor: #3c3c3c;
+                  playArea: 100;
+                  grid: none;
+                  ">
+        </a-entity>
+
+        <a-box id="suelo" position="0 -0.5S 0" rotation="0 90 0" width="100" height="1" depth="100" color="#7BC8A4"
+            visible="false" static-body></a-box>
+
+        <a-entity id="pokeball" gltf-model="#pokeball" dynamic-body="mass: 1; shape: sphere" grabbable class="clickable"
+            position="0 1 -2" rotation="0 90 0" pokeball-logic>
+        </a-entity>
+
+        <!-- Pokémon -->
+        <a-entity id="pikachu" gltf-model="#pikachu" static-body scale=".1 .1 .1s" class="pokemon" position="0 0 -5"
+            animation-mixer="clip: Idle; loop: repeat">
+        </a-entity>
+
+    </a-scene>
+
+</body>
+
+</html>

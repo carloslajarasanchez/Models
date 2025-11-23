@@ -5,30 +5,76 @@
     <script
         src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
     <script src="aframe-physics-system.min.js"></script>
+    <!--<script src="https://unpkg.com/super-hands@3.0.3/dist/super-hands.min.js"></script>-->
+    <!--<script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>-->
+
+
+
     <script>
-        const pokeball = document.getElementById('pokeball');
-        pokeball.addEventListener('collide', (e) => {
-            const target = e.detail.body.el;
-            if (target && target.classList.contains('pokemon')) {
-                target.setAttribute('animation-mixer', 'clip: Capturado; loop: once');
-            }
-        });
+        AFRAME.registerComponent('pokeball-logic', {
+  init: function () {
+    this.el.addEventListener('collide', (e) => {
+      const target = e.detail.body.el;
+      if (target && target.classList.contains('pokemon')) {
+        target.setAttribute('animation-mixer', 'clip: Capturado; loop: once');
+      }
+    });
+  }
+});
+
     </script>
 </head>
 
 <body>
     <a-scene physics="gravity: -9.8; debug: true">
         <a-assets>
-            <a-asset-item id="pokeball" src="Models/Pokeball.glb"></a-asset-item>
-            <a-asset-item id="pikachu" src="Models/Pikachu.glb"></a-asset-item>
+            <a-asset-item id="pokeball" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Pokeball.glb"></a-asset-item>
+            <a-asset-item id="pikachu" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Totodile.glb"></a-asset-item>
         </a-assets>
 
+        
+
+        <a-box grabbable  position="5 1.6 0"></a-box>
+
+        <a-entity id="player"
+          position="0 1.6 0"
+          camera
+          look-controls
+          wasd-controls="acceleration: 40"
+          kinematic-body="shape: cylinder; radius: 0.35; height: 1.6">
+        <a-cursor fuse="false" super-hands raycaster="objects: .clickable"></a-cursor>
+        </a-entity>S
+
+        <!-- Entorno con ID -->
+        <a-entity id="entorno" environment="
+                  preset: starry;
+                  lighting: sunset;
+                  lightPosition: 0 0 1;
+                  shadow: true;
+                  skyType: color;
+                  skyColor: #88ccee;
+                  horizonColor: #ffffff;
+                  groundTexture: walkernoise;
+                  groundColor: #666666;
+                  groundColor2: #515151;
+                  dressing: towers;
+                  dressingScale: 100;
+                  dressingAmount: 2;
+                  dressingColor: #3c3c3c;
+                  playArea: 100;
+                  grid: none;
+                  ">
+        </a-entity>
+
+        <a-box id="suelo" position="0 -0.5S 0" width="100" height="1" depth="100" color="#7BC8A4" visible="false"
+               static-body></a-box>s
+
         <!-- Pokeball -->
-        <a-entity id="pokeball" gltf-model="#pokeball" dynamic-body="mass: 1" grabbable position="0 1 -2">
+        <a-entity id="Pokeball" gltf-model="#pokeball" dynamic-body="mass: 1" grabbable position="0 1 -2" class="clickable" pokeball-logic>
         </a-entity>
 
         <!-- Pokémon -->
-        <a-entity id="pikachu" gltf-model="#pikachu" static-body class="pokemon" position="0 0 -5"
+        <a-entity id="pikachu" gltf-model="#pikachu" static-body class="pokemon" position="0 0 -5" scale="0.1 0.1 0.1s"
             animation-mixer="clip: Idle; loop: repeat">
         </a-entity>
     </a-scene>
