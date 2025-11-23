@@ -251,10 +251,13 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Pokeball.glb"></a-asset-item>
             <a-asset-item id="Teatro"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Teatro.glb"></a-asset-item>
-                <a-asset-item id="Gym"
-                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/GYM.glb"></a-asset-item>
-                <a-asset-item id="Lago"
+            <a-asset-item id="Gym" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/GYM.glb"></a-asset-item>
+            <a-asset-item id="Lago"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Lago.glb"></a-asset-item>
+                <a-asset-item id="Mountain"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Mountain.glb"></a-asset-item>
+                <a-asset-item id="TorreQuemada"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/TorreQuemada.glb"></a-asset-item>
         </a-assets>
 
         <!-- Player -->
@@ -324,19 +327,34 @@
             class="clickable" encender-ventanas>
         </a-entity>
 
+        <a-entity gltf-model="#Casa" position="-70 0 -75" rotation="0 -90 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" encender-ventanas>
+        </a-entity>
+
+        <a-entity gltf-model="#Casa" position="-30 0 -75" rotation="0 -90 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" encender-ventanas>
+        </a-entity>
+
+        <a-entity gltf-model="#TorreQuemada" position="-70 0 -125" rotation="0 -90 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" encender-ventanas>
+        </a-entity>
+
         <a-entity gltf-model="#Gym" position="-70 0 -20" rotation="0 -90 0" scale="1.7 2 2" static-body="shape: box"
             class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#Teatro" position="0 0 -43" rotation="0 -90 0" scale="2 2 2"
-            static-body="shape: box" class="clickable" encender-ventanas>
+        <a-entity gltf-model="#Teatro" position="0 0 -43" rotation="0 -90 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" encender-ventanas>
         </a-entity>
 
         <a-entity gltf-model="#TiendaPokemon" position="30 0 -41" rotation="0 -90 0" scale="2 2 2"
             rotar-cartel="speed: 45" class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#Lago" position="15w .25 -70" rotation="0 -90 0" scale="2 2 2">
+        <a-entity gltf-model="#Lago" position="15 .25 -100" rotation="0 -90 0" scale="2 2 2">
+        </a-entity>
+
+        <a-entity gltf-model="#Mountain" position="15 .25 -170" rotation="0 -90 0" scale="10 10 10">
         </a-entity>
 
         <!-- Limite atras arboles -->
@@ -392,6 +410,14 @@
         </a-entity>
 
         <a-entity gltf-model="#Arbol" position="-78 0 -47.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
+        </a-entity>
+
+        <a-entity gltf-model="#Arbol" position="-61 0 -77.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
+        </a-entity>
+
+        <a-entity gltf-model="#Arbol" position="-21 0 -77.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
         </a-entity>
 
