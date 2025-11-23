@@ -1,8 +1,10 @@
-﻿<html>
+﻿<!DOCTYPE html>
+<html lang="es">
 <head>
+    <meta charset="utf-8" />
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v5.0.0/dist/aframe-physics-system.min.js"></script>
+    <script src="aframe-physics-system.min.js"></script>
     <script>
         // ==========================
         //   COMPONENTE: Encender ventanas
@@ -212,35 +214,23 @@
                     arbol.setAttribute('position', `${posX} ${posY} ${posZ}`);
 
                     // Rotación aleatoria opcional
-                    arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
+                    //arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
 
                     // Escala
                     const escala = this.el.getAttribute('scale');
                     arbol.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
+                    arbol.setAttribute('static-body', 'shape:box');
 
                     sceneEl.appendChild(arbol);
-
-                    // -----------------------------
-                    // Añadir colisión invisible
-                    // -----------------------------
-                    const colision = document.createElement('a-box');
-
-                    colision.setAttribute('position', `${posX} ${posY + escala.y / 2} ${posZ}`);
-                    colision.setAttribute('width', escala.x);
-                    colision.setAttribute('height', escala.y);
-                    colision.setAttribute('depth', escala.z);
-                    colision.setAttribute('visible', 'false');          // invisible
-                    colision.setAttribute('static-body', '');           // cuerpo estático para colisiones
-
-                    sceneEl.appendChild(colision);
                 }
             }
         });
+
     </script>
 </head>
 
 <body>
-    <a-scene physics="gravity: -9.8; debug: false">
+    <a-scene physics="gravity: -9.8; debug: true; restitution: 0.3" >
         <!-- Assets -->
         <a-assets>
             <a-asset-item id="Edificio1" src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
@@ -251,16 +241,40 @@
         </a-assets>
 
         <!-- Player -->
-        <a-entity id="jugador" camera wasd-controls look-controls
-                  position="0 1.6 0"
-                  dynamic-body>
-        </a-entity>
+        <!--<a-entity id="jugador"
+                  position="0 0.8 0"
+                  geometry="primitive: cylinder; radius: 0.3; height: 1.6"
+                  dynamic-body="shape: cylinder; mass: 1"
+                  movement-controls="fly: false">
+            <a-camera position="0 0.8 0" look-controls>
+                <a-cursor raycaster="objects: .clickable"></a-cursor>
+            </a-camera>
+        </a-entity>-->
+
+        <a-entity id="player"
+          position="0 1.6 0"
+          camera
+          look-controls
+          wasd-controls="acceleration: 40"
+          kinematic-body="shape: cylinder; radius: 0.35; height: 1.6">
+  <a-cursor raycaster="objects: .clickable"></a-cursor>
+</a-entity>
+
+
+
+
+
+        <a-box position="0 2 -5" width="1" height="1" depth="1" color="#4CC3D9"
+               dynamic-body></a-box>
+        <a-box id="suelo" position="0 -0.5 0" width="100" height="1" depth="100" color="#7BC8A4" visible="false"
+               static-body></a-box>
+
+
 
         <!-- Cámara -->
-        <a-camera position="0 1.6 10">
-            <a-cursor raycaster="objects: .clickable"></a-cursor>
-        </a-camera>
-
+        <!--<a-camera position="0 1.6 10">
+        <a-cursor raycaster="objects: .clickable"></a-cursor>
+        </a-camera>-->
         <!-- Entorno con ID -->
         <a-entity id="entorno" environment="
                   preset: starry;
@@ -287,6 +301,7 @@
                   position="0 0 -15"
                   rotation="0 -90 0"
                   scale="2 2 2"
+                  static-body="shape: box"
                   class="clickable"
                   encender-ventanas>
         </a-entity>
@@ -306,6 +321,7 @@
                   position="0 0 15"
                   rotation="0 90 0"
                   scale="2 2 2"
+                  static-body="shape: box"
                   generar-linea-arboles="cantidad: 9; distancia: 5; direccion: 1 0 0">
         </a-entity>
 
