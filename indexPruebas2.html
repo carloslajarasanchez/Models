@@ -138,22 +138,51 @@
         // ==========================
         AFRAME.registerComponent('rotar-cartel', {
             schema: {
-                speed: {type: 'number', default: 30}   // grados por segundo
+                speed: { type: 'number', default: 30 } // grados por segundo
+            },
+
+            init: function () {
+                this.cartelNode = null;
+
+                this.el.addEventListener('model-loaded', () => {
+                    const mesh = this.el.getObject3D('mesh');
+                    if (!mesh) return;
+
+                    // Buscar el nodo Cartel sin filtrar por tipo
+                    mesh.traverse((node) => {
+                        if (node.name === 'Cartel') {
+                            this.cartelNode = node;
+                        }
+                    });
+
+                    if (!this.cartelNode) {
+                        console.warn("No se encontró un nodo llamado 'Cartel' en este modelo.");
+                    }
+                });
             },
 
             tick: function (time, timeDelta) {
-                const mesh = this.el.getObject3D('mesh');
-                if (!mesh) return;
+                if (!this.cartelNode) return;
 
-                mesh.traverse((node) => {
-                    if (node.isMesh && node.name === 'Cartel') {
+                // Velocidad en radianes por milisegundo
+                const rad = THREE.MathUtils.degToRad(this.data.speed) * (timeDelta / 1000);
 
-                        // Convertir velocidad a radianes por milisegundo
-                        const radians = THREE.MathUtils.degToRad(this.data.speed) * (timeDelta / 1000);
+                // Girar sobre su propio eje Y
+                this.cartelNode.rotation.y += rad;
+            }
+        });
 
-                        // Girar sobre su propio eje Y
-                        node.rotation.y += radians;
-                    }
+        AFRAME.registerComponent('debug-nodos', {
+            init: function () {
+                this.el.addEventListener('model-loaded', () => {
+                    const mesh = this.el.getObject3D('mesh');
+
+                    console.log("Nodos del modelo:");
+                    mesh.traverse((node) => {
+                        if (node.isMesh || node.isObject3D) {
+                            console.log(node.name);
+                        }
+                    });
                 });
             }
         });
@@ -204,6 +233,7 @@
                   rotation="0 -90 0"
                   scale="2 2 2"
                   rotar-cartel="speed: 45"
+                  debug-nodos
                   class="clickable"
                   encender-ventanas>
         </a-entity>
