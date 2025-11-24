@@ -3,6 +3,8 @@
 
 <head>
     <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/Png/icon.png">
+    <!-- Scripts -->
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script
         src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
@@ -259,8 +261,8 @@
                     const escala = this.el.getAttribute('scale');
                     lampara.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
                     lampara.setAttribute('static-body', 'shape:box');
-                    lampara.setAttribute('encender-ventanas','');
-                
+                    lampara.setAttribute('encender-ventanas', '');
+
 
                     sceneEl.appendChild(lampara);
                 }
@@ -293,14 +295,16 @@
             <a-asset-item id="Gym" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/GYM.glb"></a-asset-item>
             <a-asset-item id="Lago"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Lago.glb"></a-asset-item>
-                <a-asset-item id="Mountain"
+            <a-asset-item id="Mountain"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Mountain.glb"></a-asset-item>
-                <a-asset-item id="TorreQuemada"
+            <a-asset-item id="TorreQuemada"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/TorreQuemada.glb"></a-asset-item>
-                <a-asset-item id="CasaNorte"
+            <a-asset-item id="CasaNorte"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/CasaNorte.glb"></a-asset-item>
-                <a-asset-item id="Lampara"
+            <a-asset-item id="Lampara"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Lampara.glb"></a-asset-item>
+            <a-asset-item id="Torre"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Torre.glb"></a-asset-item>
         </a-assets>
 
         <!-- Player -->
@@ -338,6 +342,7 @@
                   skyType: color;
                   skyColor: #88ccee;
                   horizonColor: #ffffff;
+                  ground: hills;
                   groundTexture: walkernoise;
                   groundColor: #666666;
                   groundColor2: #515151;
@@ -378,8 +383,8 @@
             class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#TorreQuemada" position="-70 0 -125" rotation="0 -90 0" scale="2 2 2" static-body="shape: box"
-            class="clickable" encender-ventanas>
+        <a-entity gltf-model="#TorreQuemada" position="-70 0 -125" rotation="0 -90 0" scale="2 2 2"
+            static-body="shape: box" class="clickable" encender-ventanas>
         </a-entity>
 
         <a-entity gltf-model="#CasaNorte" position="-11 0 -115" rotation="0 0 0" scale="2 2 2" static-body="shape: box"
@@ -491,8 +496,9 @@
         </a-entity>
 
         <!-- Lamparas -->
-        <a-entity gltf-model="#Lampara" position="50wd 0 -80.5" rotation="0 0 0" scale="2 2 2" static-body="shape: box"
-            class="clickable" generar-linea-lamparas="cantidad: 3; distancia: 3; direccion: -1 0 0" encender-ventanas debug-nodos>
+        <a-entity gltf-model="#Lampara" position="50wd 0 -80.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" generar-linea-lamparas="cantidad: 3; distancia: 3; direccion: -1 0 0" encender-ventanas
+            debug-nodos>
         </a-entity>
     </a-scene>
 </body>

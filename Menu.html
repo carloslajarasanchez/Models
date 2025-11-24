@@ -1,0 +1,143 @@
+<html>
+
+<head>
+    <link rel="icon" type="image/png" href="/Png/icon.png">
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-troika-text/dist/aframe-troika-text.min.js"></script>
+    <script
+        src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
+    <script>
+        AFRAME.registerComponent('animate-ground-frequency', {
+            schema: {
+                min: { type: 'number', default: 100 },
+                max: { type: 'number', default: 110 },
+                speed: { type: 'number', default: 0.01 } // velocidad de cambio
+            },
+            init: function () {
+                this.direction = 1; // 1 = subiendo, -1 = bajando
+                this.value = this.data.min;
+            },
+            tick: function () {
+                // Actualizar valor
+                this.value += this.direction * this.data.speed;
+
+                // Cambiar dirección al llegar a límites
+                if (this.value >= this.data.max) {
+                    this.value = this.data.max;
+                    this.direction = -1;
+                } else if (this.value <= this.data.min) {
+                    this.value = this.data.min;
+                    this.direction = 1;
+                }
+
+                // Aplicar al componente environment
+                this.el.setAttribute('environment', 'groundDensity', this.value);
+            }
+        });
+
+    </script>
+
+
+
+</head>
+
+<body>
+    <a-scene>
+
+        <!-- Assets -->
+        <a-assets>
+            <a-asset-item id="Torre"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Torre.glb"></a-asset-item>
+                <a-asset-item id="Ho-oh"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Ho-oh.glb"></a-asset-item>
+            <audio id="Intro" src="Music/PokemonHeartGold-Intro.mp3" preload="auto"></audio>
+        </a-assets>
+
+        <!-- Cámara para ver el menú -->
+        <a-entity position="0 1.6 3">
+            <a-camera>
+                <a-cursor></a-cursor>
+            </a-camera>
+        </a-entity>
+
+        <!-- Enviroment -->
+        <a-entity id="entorno" environment="
+                  preset: default;
+                  lighting: sunset;
+                  lightPosition: 0 0 1;
+                  seed: 1;
+                  fog: .5;
+                  shadow: true;
+                  skyType: color;
+                  skyColor: #88ccee;
+                  horizonColor: #ffffff;
+                  ground: hills;
+                  groundTexture: walkernoise;
+                  groundColor: #FFFFFF;
+                  groundYScale: 5;
+                  groundColor2: #FAFFFF;
+                  groundFrequency: 110;
+                  groundDensity: 65;
+                  stageSize: 300;
+                  playArea: .7;
+                  grid: none;
+                  "
+                  animate-ground-frequency="min: 100; max: 100.9; speed: .01s">
+        </a-entity>
+
+
+        <!-- Texto del título -->
+        <a-entity troika-text="value: Pokemon Oro \n Ciudad Iris Tour;
+                       font: Fonts/Pokemon-Solid.ttf;
+                       fontSize: 2;
+                       color:  #FFD700;
+                       outlineColor: #0A1BE0;
+                       outlineWidth: .2;
+                       align: center" position="0 7 -5">
+        </a-entity>
+
+        <!-- Botón "Jugar" -->
+        <a-entity id="btnJugar" geometry="primitive: plane; height: 2; width: 2"
+            material="src: Png/Pokeball-png.png; transparent: true" position="0 2 -5">
+
+
+        </a-entity>
+        <a-entity troika-text="value: Jugar;
+                       font: Fonts/Pokemon-Solid.ttf;
+                       fontSize: .5;
+                       color:  #FFFFFF;
+                       outlineColor: #000000;
+                       outlineWidth: .1;
+                       align: center" position="0 2 -4.9"
+                       class="no-interactive">
+        </a-entity>
+
+        <!-- Torre Campana -->
+        <a-entity gltf-model="#Torre" position="20 -30 -50" rotation="0 -90 0" scale="2 2 2">
+        </a-entity>
+
+        <!-- Ho-oh -->
+        <a-entity gltf-model="#Ho-oh" position="0 0 -20" rotation="0 -90 0" scale="2 2 2">
+        </a-entity>
+
+        <!-- Música de fondo -->
+        <audio id="testAudio" src="Music/PokemonHeartGold-Intro.mp3" loop></audio>
+
+
+    </a-scene>
+
+    <script>
+        // Al hacer click en el botón, redirige al otro HTML
+        document.querySelector('#btnJugar').addEventListener('click', () => {
+            window.location.href = "indexPruebas2.html"; // ← tu archivo del juego
+        });
+    </script>
+    <script>
+        document.addEventListener('click', () => {
+            document.getElementById('testAudio').play();
+        });
+    </script>
+
+</body>
+
+</html>
