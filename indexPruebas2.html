@@ -273,7 +273,7 @@
 </head>
 
 <body>
-    <a-scene physics="gravity: -9.8; debug: false; restitution: 0.3">
+    <a-scene physics="gravity: -9.8; debug: true; restitution: 0.3">
         <!-- Assets -->
         <a-assets>
             <a-asset-item id="Edificio1"
@@ -351,6 +351,8 @@
                   grid: none;
                   ">
         </a-entity>
+
+        <audio id="testAudio" src="Music/Ciudad-Iris.mp3" loop></audio>
 
         <!--      dressing: trees;
                   dressingScale: 100;
@@ -496,11 +498,18 @@
         </a-entity>
 
         <!-- Lamparas -->
-        <a-entity gltf-model="#Lampara" position="50wd 0 -80.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+        <a-entity gltf-model="#Lampara" position="50 0 -80.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             class="clickable" generar-linea-lamparas="cantidad: 3; distancia: 3; direccion: -1 0 0" encender-ventanas
             debug-nodos>
         </a-entity>
     </a-scene>
+
+    <!-- Reproducir musica -->
+    <script>
+        document.addEventListener('click', () => {
+            document.getElementById('testAudio').play();
+        });
+    </script>
 </body>
 
 </html>

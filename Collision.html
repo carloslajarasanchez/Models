@@ -10,48 +10,186 @@
     <!--<script src="https://unpkg.com/super-hands@3.0.3/dist/super-hands.min.js"></script>-->
 
 
-
-
-
-
     <script>
         AFRAME.registerComponent('pokeball-logic', {
+            schema: {
+                stopDelay: { type: 'number', default: 1500 }, // tiempo antes de detener la bola (ms)
+                pokemonDisappearDelay: { type: 'number', default: 1000 } // tiempo antes de desaparecer Pokémon (ms)
+            },
             init: function () {
                 this.el.addEventListener('collide', (e) => {
                     const target = e.detail.body.el;
+
                     if (target && target.classList.contains('pokemon')) {
-                        target.setAttribute('animation-mixer', 'clip: Capturado; loop: once');
+
+                        // ─── 1. Animación en la pokeball ───
+                        this.el.setAttribute('animation-mixer', {
+                            clip: 'ArribaAction',
+                            loop: 'once',
+                            crossFadeDuration: 0,
+                            clampWhenFinished: true
+                        });
+
+                        // ─── 2. Crear luz temporal en el Pokémon ───
+                        const light = document.createElement('a-entity');
+                        light.setAttribute('light', {
+                            type: 'point',
+                            intensity: 10,
+                            distance: 5,
+                            color: '#f80000'
+                        });
+                        light.setAttribute('position', '0 2 0'); // posición aproximada del centro
+                        target.appendChild(light);
+
+                        // ─── 3. Cambiar material del Pokémon → emisivo + transparente ───
+                        target.object3D.traverse((node) => {
+                            if (node.isMesh) {
+                                node.originalMaterial = node.material;
+                                node.material = new THREE.MeshStandardMaterial({
+                                    color: '#f80000',
+                                    emissive: new THREE.Color('red'),
+                                    emissiveIntensity: 10,
+                                    transparent: true,
+                                    opacity: 0.5,
+                                    roughness: node.originalMaterial.roughness ?? 0.8,
+                                    metalness: node.originalMaterial.metalness ?? 0
+                                });
+                            }
+                        });
+
+                        // ─── 4. Desaparecer Pokémon y quitar luz después de pokemonDisappearDelay ───
+                        setTimeout(() => {
+                            if (light.parentElement) {
+                                light.parentElement.removeChild(light);
+                            }
+                            target.setAttribute('visible', 'false');
+                            //target.removeAttribute('static-body');
+                        }, this.data.pokemonDisappearDelay);
+
+                        // ─── 5. Volver animación Idle en la pokeball ───
+                        setTimeout(() => {
+                            this.el.setAttribute('animation-mixer', {
+                                clip: 'Idle',
+                                loop: 'repeat'
+                            });
+                        }, this.data.pokemonDisappearDelay);
+
+                        // ─── 6. Detener la pokeball automáticamente después de stopDelay ───
+                        setTimeout(() => {
+                            if (this.el.body) {
+                                this.el.body.velocity.set(0, 0, 0);
+                                this.el.body.angularVelocity.set(0, 0, 0);
+                                this.el.body.sleep(); // detiene la física hasta que se vuelva a lanzar
+                            }
+                        }, this.data.stopDelay);
                     }
                 });
             }
+
         });
 
         AFRAME.registerComponent('cursor-grab', {
             init: function () {
+                const cameraEl = document.querySelector('#camera');
+                this.grabbedBall = null;
+
+                // ────── CLICK PARA COGER ──────
                 this.el.addEventListener('click', (e) => {
                     const intersected = e.detail.intersectedEl;
-                    if (intersected && intersected.classList.contains('clickable')) {
-                        // Si la bola está en el suelo, la coges delante de la cámara
-                        if (!intersected.isGrabbed) {
-                            intersected.isGrabbed = true;
-                            intersected.removeAttribute('dynamic-body'); // quitas físicas mientras está agarrada
-                            intersected.setAttribute('parent', '#camera'); // la pegas a la cámara
-                            intersected.setAttribute('position', '0 5 -1');
-                            
-                        } else {
-                            // Si ya está agarrada, la sueltas/lanzas
-                            intersected.isGrabbed = false;
-                            intersected.removeAttribute('parent');
-                            intersected.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
-                            // darle impulso hacia delante
-                            intersected.body.velocity.set(0, 2, -5);
-                        }
+                    if (!intersected || !intersected.classList.contains('clickable')) return;
+
+                    if (!intersected.isGrabbed) {
+                        intersected.isGrabbed = true;
+                        this.grabbedBall = intersected;
+
+                        // Quitar físicas
+                        intersected.removeAttribute('dynamic-body');
+
+                        // Añadir a la cámara para que siga
+                        cameraEl.object3D.add(intersected.object3D);
+                        intersected.object3D.position.set(0, 0.1, -1);
+                        intersected.object3D.rotation.set(0, 1.55, 0);
                     }
                 });
+
+                // ────── ESPACIO PARA SOLTAR ──────
+                window.addEventListener('keydown', (evt) => {
+                    if (evt.code === 'Space' && this.grabbedBall) {
+                        const ball = this.grabbedBall;
+                        ball.isGrabbed = false;
+
+                        // Guardamos la posición actual de la bola (donde está delante de la cámara)
+                        const currentPos = new THREE.Vector3();
+                        ball.object3D.getWorldPosition(currentPos);
+
+                        // Quitar de la cámara y añadir al root
+                        const sceneObj = document.querySelector('a-scene').object3D;
+                        sceneObj.add(ball.object3D);
+                        ball.object3D.position.copy(currentPos);
+
+                        // Activar física
+                        ball.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
+
+                        // Lanzar hacia adelante + un poco hacia arriba según cámara
+                        const cameraObj = cameraEl.object3D;
+                        const forward = new THREE.Vector3(0, 0, -1);
+                        forward.applyQuaternion(cameraObj.quaternion);
+                        forward.normalize().multiplyScalar(5); // fuerza
+                        forward.y += 2; // un poco de elevación
+                        ball.body.velocity.set(forward.x, forward.y, forward.z);
+
+                        this.grabbedBall = null;
+                    }
+                });
+            }
+
+        });
+
+        // ────── ESPACIO PARA SOLTAR ──────
+        window.addEventListener('keydown', (evt) => {
+            if (evt.code === 'Space' && this.grabbedBall) {
+                const ball = this.grabbedBall;
+                ball.isGrabbed = false;
+
+                // Quitar de la cámara y añadir al root
+                const sceneObj = document.querySelector('a-scene').object3D;
+                sceneObj.add(ball.object3D);
+
+                // Activar física
+                ball.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
+
+                // Lanzar hacia adelante según cámara
+                const cameraObj = cameraEl.object3D;
+                const forward = new THREE.Vector3(0, .5, -1);
+                forward.applyQuaternion(cameraObj.quaternion);
+                forward.multiplyScalar(5); // fuerza de lanzamiento
+                ball.body.velocity.set(forward.x, forward.y + 2, forward.z);
+
+                this.grabbedBall = null;
             }
         });
 
 
+        AFRAME.registerComponent("damping", {
+            schema: {
+                linear: { type: "number", default: 0.1 },
+                angular: { type: "number", default: 0.1 }
+            },
+
+            init: function () {
+                const body = this.el.body;
+                if (!body) {
+                    this.el.addEventListener("body-loaded", () => {
+                        this.el.body.linearDamping = this.data.linear;
+                        this.el.body.angularDamping = this.data.angular;
+                    });
+                    return;
+                }
+
+                body.linearDamping = this.data.linear;
+                body.angularDamping = this.data.angular;
+            }
+        });
 
     </script>
 </head>
@@ -65,6 +203,7 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Totodile.glb"></a-asset-item>
         </a-assets>
         <a-camera id="camera" position="0 1.6 0" look-controls>
+            <a-entity id="hand-slot" position="0 -0.2 -1"></a-entity>
             <a-cursor fuse="false" raycaster="objects: .clickable" cursor-grab></a-cursor>
         </a-camera>
 
@@ -96,7 +235,8 @@
             visible="false" static-body></a-box>
 
         <a-entity id="pokeball" gltf-model="#pokeball" dynamic-body="mass: 1; shape: sphere" grabbable class="clickable"
-            position="0 1 -2" rotation="0 90 0" pokeball-logic>
+            position="0 1 -2" rotation="0 90 0" pokeball-logic="stopDelay:3000; pokemonDisappearDelay:1500"
+            damping="linear: .2; angular: 1">
         </a-entity>
 
         <!-- Pokémon -->
