@@ -48,7 +48,7 @@
         <a-assets>
             <a-asset-item id="Torre"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Torre.glb"></a-asset-item>
-                <a-asset-item id="Ho-oh"
+            <a-asset-item id="Ho-oh"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Ho-oh.glb"></a-asset-item>
             <audio id="Intro" src="Music/PokemonHeartGold-Intro.mp3" preload="auto"></audio>
         </a-assets>
@@ -81,8 +81,7 @@
                   stageSize: 300;
                   playArea: .7;
                   grid: none;
-                  "
-                  animate-ground-frequency="min: 100; max: 100.9; speed: .01s">
+                  " animate-ground-frequency="min: 100; max: 100.9; speed: .01s">
         </a-entity>
 
 
@@ -108,8 +107,7 @@
                        color:  #FFFFFF;
                        outlineColor: #000000;
                        outlineWidth: .1;
-                       align: center" position="0 2 -4.9"
-                       class="no-interactive">
+                       align: center" position="0 2 -4.9" class="no-interactive">
         </a-entity>
 
         <!-- Torre Campana -->
@@ -117,8 +115,10 @@
         </a-entity>
 
         <!-- Ho-oh -->
-        <a-entity gltf-model="#Ho-oh" position="0 0 -20" rotation="0 0 0" animation-mixer="clip: Take 001_GLTF_created_0; loop: repeat; crossFadeDuration: 0.3" scale=".5 .5 .5">
+        <a-entity gltf-model="#Ho-oh" animation-mixer="clip: *; loop: repeat" position="0 0 -20"
+            scale="0.5 0.5 0.5">
         </a-entity>
+
 
         <!-- Música de fondo -->
         <audio id="testAudio" src="Music/PokemonHeartGold-Intro.mp3" loop></audio>
@@ -136,6 +136,13 @@
         document.addEventListener('click', () => {
             document.getElementById('testAudio').play();
         });
+    </script>
+    <script>
+        const hooh = document.querySelector('[gltf-model="#Ho-oh"]');
+        hooh.addEventListener('model-loaded', () => {
+            console.log("✅ Modelo Ho-oh cargado");
+        });
+
     </script>
 
 </body>
