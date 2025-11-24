@@ -228,6 +228,45 @@
             }
         });
 
+        AFRAME.registerComponent('generar-linea-lamparas', {
+            schema: {
+                cantidad: { type: 'number', default: 10 },
+                distancia: { type: 'number', default: 5 },
+                direccion: { type: 'vec3', default: { x: 0, y: 0, z: 1 } },
+            },
+
+            init: function () {
+                const sceneEl = this.el.sceneEl;
+                const inicio = this.el.getAttribute('position');
+
+                for (let i = 1; i <= this.data.cantidad; i++) {
+                    const lampara = document.createElement('a-entity');
+
+                    // Copiar el modelo del árbol original
+                    const modelo = this.el.getAttribute('gltf-model');
+                    lampara.setAttribute('gltf-model', modelo);
+
+                    // Posición del árbol
+                    const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
+                    const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
+                    const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
+                    lampara.setAttribute('position', `${posX} ${posY} ${posZ}`);
+
+                    // Rotación aleatoria opcional
+                    //arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
+
+                    // Escala
+                    const escala = this.el.getAttribute('scale');
+                    lampara.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
+                    lampara.setAttribute('static-body', 'shape:box');
+                    lampara.setAttribute('encender-ventanas','');
+                
+
+                    sceneEl.appendChild(lampara);
+                }
+            }
+        });
+
     </script>
 </head>
 
@@ -258,6 +297,10 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Mountain.glb"></a-asset-item>
                 <a-asset-item id="TorreQuemada"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/TorreQuemada.glb"></a-asset-item>
+                <a-asset-item id="CasaNorte"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/CasaNorte.glb"></a-asset-item>
+                <a-asset-item id="Lampara"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Lampara.glb"></a-asset-item>
         </a-assets>
 
         <!-- Player -->
@@ -339,6 +382,10 @@
             class="clickable" encender-ventanas>
         </a-entity>
 
+        <a-entity gltf-model="#CasaNorte" position="-11 0 -115" rotation="0 0 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" encender-ventanas>
+        </a-entity>
+
         <a-entity gltf-model="#Gym" position="-70 0 -20" rotation="0 -90 0" scale="1.7 2 2" static-body="shape: box"
             class="clickable" encender-ventanas>
         </a-entity>
@@ -351,10 +398,10 @@
             rotar-cartel="speed: 45" class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#Lago" position="15 .25 -100" rotation="0 -90 0" scale="2 2 2">
+        <a-entity gltf-model="#Lago" position="13 .25 -100" rotation="0 -90 0" scale="2 2 2">
         </a-entity>
 
-        <a-entity gltf-model="#Mountain" position="15 .25 -170" rotation="0 -90 0" scale="10 10 10">
+        <a-entity gltf-model="#Mountain" position="15 .25 -200" rotation="0 -90 0" scale="10 10 10">
         </a-entity>
 
         <!-- Limite atras arboles -->
@@ -391,13 +438,27 @@
         </a-entity>
         <!-- Limite derecho arboles -->
         <a-entity gltf-model="#Arbol" position="60 0 15" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
-            generar-linea-arboles="cantidad: 20; distancia: 5; direccion: 0 0 -1">
+            generar-linea-arboles="cantidad: 21; distancia: 5; direccion: 0 0 -1">
         </a-entity>
         <a-entity gltf-model="#Arbol" position="65 0 17.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
-            generar-linea-arboles="cantidad: 20; distancia: 5; direccion: 0 0 -1">
+            generar-linea-arboles="cantidad: 21; distancia: 5; direccion: 0 0 -1">
         </a-entity>
         <a-entity gltf-model="#Arbol" position="70 0 15" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
-            generar-linea-arboles="cantidad: 20; distancia: 5; direccion: 0 0 -1">
+            generar-linea-arboles="cantidad: 21; distancia: 5; direccion: 0 0 -1">
+        </a-entity>
+
+        <!-- Limite delante derecha arboles -->
+        <a-entity gltf-model="#Arbol" position="55 0 -90" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            generar-linea-arboles="cantidad: 5; distancia: 5; direccion: -1 0 0">
+        </a-entity>
+        <a-entity gltf-model="#Arbol" position="55 0 -85" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            generar-linea-arboles="cantidad: 4; distancia: 5; direccion: -1 0 0">
+        </a-entity>
+        <a-entity gltf-model="#Arbol" position="55 0 -100" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            generar-linea-arboles="cantidad: 5; distancia: 5; direccion: -1 0 0">
+        </a-entity>
+        <a-entity gltf-model="#Arbol" position="57.5 0 -95" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            generar-linea-arboles="cantidad: 5; distancia: 5; direccion: -1 0 0">
         </a-entity>
 
         <!-- Arboles casas-->
@@ -429,6 +490,10 @@
             position="0 1 -2" rotation="0 90 0" pokeball-logic>
         </a-entity>
 
+        <!-- Lamparas -->
+        <a-entity gltf-model="#Lampara" position="50wd 0 -80.5" rotation="0 0 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" generar-linea-lamparas="cantidad: 3; distancia: 3; direccion: -1 0 0" encender-ventanas debug-nodos>
+        </a-entity>
     </a-scene>
 </body>
 
