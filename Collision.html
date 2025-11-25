@@ -326,6 +326,8 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Pokeball.glb"></a-asset-item>
             <a-asset-item id="totodile"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Totodile.glb"></a-asset-item>
+            <a-asset-item id="cyndaquil"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/cyndaquil.glb"></a-asset-item>
         </a-assets>
         <a-camera id="camera" position="0 1.6 0" look-controls>
             <a-entity id="hand-slot" position="0 -0.2 -1"></a-entity>
@@ -365,9 +367,14 @@
         </a-entity>
 
         <!-- Pokémon -->
-        <a-entity id="totodile" gltf-model="#totodile" static-body scale=".1 .1 .1s" class="pokemon" position="0 0 -5"
+        <a-entity id="totodile" gltf-model="#totodile" static-body scale=".1 .1 .1" class="pokemon" position="0 0 -5"
             pingpong-move-smooth="start: 0 0 -5; end: 0 0 -10; speed: 0.02; rotSpeed: 0.02"
             capture-sound="Music/Cries-Totodile.mp3">
+        </a-entity>
+
+        <a-entity id="cyndaquil" gltf-model="#cyndaquil" static-body scale="7d 7 7" class="pokemon" position="5 0 -5"
+            pingpong-move-smooth="start: 5 0 -5; end: 5 0 -10; speed: 0.02; rotSpeed: 0.02"
+            capture-sound="Music/Cries-Cyndaquil.mp3">
         </a-entity>
 
         <a-entity id="testButton" geometry="primitive: box; width: 0.5; height: 0.2; depth: 0.1" position="0 1 5"
