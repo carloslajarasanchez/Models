@@ -276,10 +276,6 @@
     <a-scene physics="gravity: -9.8; debug: true; restitution: 0.3">
         <!-- Assets -->
         <a-assets>
-            <a-asset-item id="Edificio1"
-                src="https://carloslajarasanchez.github.io/Models/Edificio1.glb"></a-asset-item>
-            <a-asset-item id="Edificio2"
-                src="https://carloslajarasanchez.github.io/Models/Edificio2.glb"></a-asset-item>
             <a-asset-item id="CentroPokemon"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/CentroPokemon.glb"></a-asset-item>
             <a-asset-item id="TiendaPokemon"
@@ -297,6 +293,8 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Lago.glb"></a-asset-item>
             <a-asset-item id="Mountain"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Mountain.glb"></a-asset-item>
+            <a-asset-item id="Mountain2"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Mountain2.glb"></a-asset-item>
             <a-asset-item id="TorreQuemada"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/TorreQuemada.glb"></a-asset-item>
             <a-asset-item id="CasaNorte"
@@ -305,34 +303,18 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Lampara.glb"></a-asset-item>
             <a-asset-item id="Torre"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Torre.glb"></a-asset-item>
+            <a-asset-item id="CartelMadera"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/CartelMadera.glb"></a-asset-item>
+            <a-asset-item id="Poste"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Poste.glb"></a-asset-item>
         </a-assets>
 
         <!-- Player -->
-        <!--<a-entity id="jugador"
-                  position="0 0.8 0"
-                  geometry="primitive: cylinder; radius: 0.3; height: 1.6"
-                  dynamic-body="shape: cylinder; mass: 1"
-                  movement-controls="fly: false">
-            <a-camera position="0 0.8 0" look-controls>
-                <a-cursor raycaster="objects: .clickable"></a-cursor>
-            </a-camera>
-        </a-entity>-->
-
         <a-entity id="player" position="0 1.6 0" camera look-controls wasd-controls="acceleration: 40"
             kinematic-body="shape: cylinder; radius: 0.35; height: 1.6">
             <a-cursor raycaster="objects: .clickable"></a-cursor>
         </a-entity>
 
-        <a-box position="0 2 -5" width="1" height="1" depth="1" color="#4CC3D9" dynamic-body></a-box>
-        <a-box id="suelo" position="0 -0.5 0" width="100" height="1" depth="100" color="#7BC8A4" visible="false"
-            static-body></a-box>
-
-
-
-        <!-- Cámara -->
-        <!--<a-camera position="0 1.6 10">
-        <a-cursor raycaster="objects: .clickable"></a-cursor>
-        </a-camera>-->
         <!-- Entorno con ID -->
         <a-entity id="entorno" environment="
                   preset: starry;
@@ -362,7 +344,7 @@
 
         <!-- Edificios -->
         <a-entity gltf-model="#CentroPokemon" position="0 0 -15" rotation="0 -90 0" scale="2 2 2"
-            static-body="shape: box" class="clickable" encender-ventanas>
+            static-body="shape: hull; fit: all" class="clickable" encender-ventanas>
         </a-entity>
 
         <a-entity gltf-model="#Casa" position="30 0 -15" rotation="0 0 0" scale="2 2 2" static-body="shape: box"
@@ -401,7 +383,7 @@
             class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#TiendaPokemon" position="30 0 -41" rotation="0 -90 0" scale="2 2 2"
+        <a-entity gltf-model="#TiendaPokemon" position="30 0 -41" rotation="0 -90 0" scale="2 2 2" static-body="shape: box"
             rotar-cartel="speed: 45" class="clickable" encender-ventanas>
         </a-entity>
 
@@ -468,8 +450,12 @@
             generar-linea-arboles="cantidad: 5; distancia: 5; direccion: -1 0 0">
         </a-entity>
 
-        <!-- Arboles casas-->
+        <!-- Arboles edificios-->
         <a-entity gltf-model="#Arbol" position="22 0 -17.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
+        </a-entity>
+        
+        <a-entity gltf-model="#Arbol" position="37 0 -45" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
         </a-entity>
 
@@ -499,9 +485,15 @@
 
         <!-- Lamparas -->
         <a-entity gltf-model="#Lampara" position="50 0 -80.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
-            class="clickable" generar-linea-lamparas="cantidad: 3; distancia: 3; direccion: -1 0 0" encender-ventanas
-            debug-nodos>
+            class="clickable" generar-linea-lamparas="cantidad: 3; distancia: 3; direccion: -1 0 0" encender-ventanas>
         </a-entity>
+        <!-- Lamparas casa-->
+        <a-entity gltf-model="#Lampara" position="37 0 -9" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+            class="clickable" encender-ventanas>
+        </a-entity>
+        <!-- Suelo -->
+        <a-box id="suelo" position="0 -0.5 -40" width="240" height="1" depth="200" color="#7BC8A4" visible="false"
+            static-body></a-box>
     </a-scene>
 
     <!-- Reproducir musica -->
