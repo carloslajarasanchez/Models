@@ -343,9 +343,13 @@
         -->
 
         <!-- Edificios -->
-        <a-entity gltf-model="#CentroPokemon" position="0 0 -15" rotation="0 -90 0" scale="2 2 2"
-            static-body="shape: hull; fit: all" class="clickable" encender-ventanas>
+        <a-entity gltf-model="#CentroPokemon" position="0 0 -15" rotation="0 -90 0" scale="2 2 2"a class="clickable"
+            encender-ventanas>
         </a-entity>
+        <!--<a-entity gltf-model="#CentroPokemon" position="0 0 -15" rotation="90a 90 0" scale="2 2 2" visible="false"
+            static-body="shape: hull; fit: all">
+        </a-entity>-->
+
 
         <a-entity gltf-model="#Casa" position="30 0 -15" rotation="0 0 0" scale="2 2 2" static-body="shape: box"
             class="clickable" encender-ventanas>
@@ -375,7 +379,7 @@
             class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#Gym" position="-70 0 -20" rotation="0 -90 0" scale="1.7 2 2" static-body="shape: box"
+        <a-entity gltf-model="#Gym" position="-70 0 -20" rotation="0 -90 0" scale="1.7 2 2" static-body="shape: hull; fit: all;"
             class="clickable" encender-ventanas>
         </a-entity>
 
@@ -383,8 +387,8 @@
             class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#TiendaPokemon" position="30 0 -41" rotation="0 -90 0" scale="2 2 2" static-body="shape: box"
-            rotar-cartel="speed: 45" class="clickable" encender-ventanas>
+        <a-entity gltf-model="#TiendaPokemon" position="30 0 -41" rotation="0 -90 0" scale="2 2 2"
+            static-body="shape: box" rotar-cartel="speed: 45" class="clickable" encender-ventanas>
         </a-entity>
 
         <a-entity gltf-model="#Lago" position="13 .25 -100" rotation="0 -90 0" scale="2 2 2">
@@ -454,7 +458,7 @@
         <a-entity gltf-model="#Arbol" position="22 0 -17.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
         </a-entity>
-        
+
         <a-entity gltf-model="#Arbol" position="37 0 -45" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
         </a-entity>
