@@ -523,27 +523,77 @@
         });
 
         //-------- Boton subir torre ---------------
-        AFRAME.registerComponent('unlock-button', {
-            init: function () {
-                this.el.setAttribute('material', 'color', 'gray'); // inicialmente bloqueado
-                this.el.setAttribute('clickable', ''); // para poder interactuar después
-
-                // Escuchar el evento global
-                this.el.sceneEl.addEventListener('pokemonCaptured', (e) => {
-                    if (e.detail.count >= 6) {
-                        this.el.setAttribute('material', 'color', 'green'); // desbloqueado visualmente
-                        this.el.addEventListener('click', this.onClick); // activar interacción
-                    }
-                });
+        AFRAME.registerComponent('generar-linea-suelos', {
+            schema: {
+                cantidad: { type: 'number', default: 3 },       // número de copias
+                distancia: { type: 'number', default: 55 },     // separación
+                direccion: { type: 'vec3', default: { x: 1, y: 0, z: 0 } } // vector dirección
             },
+            init: function () {
+                const sceneEl = this.el.sceneEl;
+                const inicio = this.el.getAttribute('position');
 
-            onClick: function () {
-                console.log('Botón físico pulsado!');
-                // Aquí puedes llamar a la función que quieras
+                // atributos base del suelo original
+                const width = this.el.getAttribute('width');
+                const height = this.el.getAttribute('height');
+                const depth = this.el.getAttribute('depth');
+                const material = this.el.getAttribute('material');
+                const escala = this.el.getAttribute('scale');
+
+                for (let i = 1; i <= this.data.cantidad; i++) {
+                    const suelo = document.createElement('a-box');
+
+                    // copiar atributos principales
+                    suelo.setAttribute('width', width);
+                    suelo.setAttribute('height', height);
+                    suelo.setAttribute('depth', depth);
+                    suelo.setAttribute('material', material);
+                    suelo.setAttribute('scale', escala);
+
+                    // calcular posición según dirección y distancia
+                    const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
+                    const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
+                    const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
+                    suelo.setAttribute('position', `${posX} ${posY} ${posZ}`);
+
+                    sceneEl.appendChild(suelo);
+                }
             }
         });
 
-        //-------- Movimiento pokemon --------------
+
+        //Metodo para repetir modelo
+        AFRAME.registerComponent('repeat', {
+            schema: {
+                count: { type: 'int', default: 3 },          // número de copias
+                spacing: { type: 'number', default: 5 },       // separación
+                direction: { type: 'vec3', default: { x: 1, y: 0, z: 0 } } // vector dirección
+            },
+            init: function () {
+                const parent = this.el;
+                const attrs = parent.getAttributeNames(); // atributos del padre
+                const pos = parent.getAttribute('position');
+
+                for (let i = 1; i <= this.data.count; i++) {
+                    const clone = document.createElement(parent.tagName.toLowerCase());
+
+                    // copiar atributos del padre
+                    attrs.forEach(attr => {
+                        clone.setAttribute(attr, parent.getAttribute(attr));
+                    });
+
+                    // calcular nueva posición
+                    clone.setAttribute('position', {
+                        x: pos.x + i * this.data.spacing * this.data.direction.x,
+                        y: pos.y + i * this.data.spacing * this.data.direction.y,
+                        z: pos.z + i * this.data.spacing * this.data.direction.z
+                    });
+
+                    parent.sceneEl.appendChild(clone);
+                }
+            }
+        });
+
         AFRAME.registerComponent('pingpong-move-smooth', {
             schema: {
                 start: { type: 'vec3', default: { x: 0, y: 0, z: -5 } },
@@ -595,7 +645,7 @@
 </head>
 
 <body>
-    <a-scene physics="gravity: -9.8; debug: true; restitution: 0.3">
+    <a-scene physics="gravity: -9.8; debug: false; restitution: 0.3">
         <!-- Assets -->
         <a-assets>
             <a-asset-item id="CentroPokemon"
@@ -656,7 +706,7 @@
                   skyType: color;
                   skyColor: #88ccee;
                   horizonColor: #ffffff;
-                  ground: hills;
+                  ground: none;
                   groundTexture: walkernoise;
                   groundColor: #666666;
                   groundColor2: #515151;
@@ -699,12 +749,12 @@
         </a-entity>
 
         <!-- Casa 4-->
-        <a-entity gltf-model="#Casa" position="-70 0 -75" rotation="0 -90 0" scale="2 2 2" class="clickable"
+        <a-entity gltf-model="#Casa" position="-70 0 -70" rotation="0 -90 0" scale="2 2 2" class="clickable"
             encender-ventanas static-body="shape: hull;">
         </a-entity>
 
         <!-- Casa 5-->
-        <a-entity gltf-model="#Casa" position="-30 0 -77" rotation="0 -90 0" scale="2 2 2" class="clickable"
+        <a-entity gltf-model="#Casa" position="-30 0 -70" rotation="0 -90 0" scale="2 2 2" class="clickable"
             encender-ventanas static-body="shape: hull;">
         </a-entity>
 
@@ -720,7 +770,7 @@
             static-body="shape: hull;" class="clickable" encender-ventanas>
         </a-entity>
 
-        <a-entity gltf-model="#Gym" position="-70 0 -20" rotation="0 -90 0" scale="1.7 2 2" static-body="shape: hull;"
+        <a-entity gltf-model="#Gym" position="-70 0 -15" rotation="0 -90 0" scale="1.7 2 2" static-body="shape: hull;"
             class="clickable" encender-ventanas>
         </a-entity>
 
@@ -850,11 +900,11 @@
             generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
         </a-entity>
 
-        <a-entity gltf-model="#Arbol" position="-60 0 -77.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+        <a-entity gltf-model="#Arbol" position="-60 0 -72.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
         </a-entity>
 
-        <a-entity gltf-model="#Arbol" position="-21 0 -77.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+        <a-entity gltf-model="#Arbol" position="-21.5 0 -72.5" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             generar-linea-arboles="cantidad: 1; distancia: 5; direccion: 0 0 1">
         </a-entity>
 
@@ -872,10 +922,10 @@
         <a-entity gltf-model="#Lampara" position="-77 0 -39.7" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             class="clickable" encender-ventanas>
         </a-entity>
-        <a-entity gltf-model="#Lampara" position="-77 0 -70" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+        <a-entity gltf-model="#Lampara" position="-77 0 -65" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             class="clickable" encender-ventanas>
         </a-entity>
-        <a-entity gltf-model="#Lampara" position="-37 0 -70" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
+        <a-entity gltf-model="#Lampara" position="-37 0 -65" rotation="0 90 0" scale="2 2 2" static-body="shape: box"
             class="clickable" encender-ventanas>
         </a-entity>
 
@@ -899,10 +949,124 @@
             position="0 1 -2" rotation="0 90 0" pokeball-logic>
         </a-entity>
 
-        
+
         <!-- Suelo -->
         <a-box id="suelo" position="0 -0.5 -40" width="240" height="1" depth="200" color="#7BC8A4" visible="false"
             static-body></a-box>
+
+        <!-- Cesped atras -->
+        <a-box id="suelo" position="90 -.5 35" width="50" height="1" depth="50"
+            material="src: Png/Grass.png; repeat: 10 10;"
+            generar-linea-suelos="cantidad: 5; distancia: 50; direccion: -1 0 0">
+        </a-box>
+        <a-box id="suelo" position="90 -.5 35" width="50" height="1" depth="50"
+            material="src: Png/Grass.png; repeat: 10 10;"
+            generar-linea-suelos="cantidad: 5; distancia: 50; direccion: -1 0 0">
+        </a-box>
+        <!-- Cesped Derecha-->
+        <a-box id="suelo" position="80 -.5 0" width="50" height="1" depth="50"
+            material="src: Png/Grass.png; repeat: 10 10;"
+            generar-linea-suelos="cantidad: 3; distancia: 50; direccion: 0 0 -1">
+        </a-box>
+        <!-- Cesped Izquierda -->
+        <a-box id="suelo" position="-125 -.5 0" width="50" height="1" depth="50"
+            material="src: Png/Grass.png; repeat: 10 10;"
+            generar-linea-suelos="cantidad: 3; distancia: 50; direccion: 0 0 -1">
+        </a-box>
+        <!-- Cesped Delante Derecha-->
+        <a-box id="suelo" position="80 -.5 -100" width="50" height="1" depth="50"
+            material="src: Png/Grass.png; repeat: 10 10;"
+            generar-linea-suelos="cantidad: 1; distancia: 50; direccion: -1 0 0">
+        </a-box>
+        <!-- Cesped Delante Casa Norte-->
+        <a-box id="suelo" position="0 -.5 -110" width="50" height="1" depth="50"
+            material="src: Png/Grass.png; repeat: 10 10;"
+            generar-linea-suelos="cantidad: 2; distancia: 50; direccion: -1 0 0">
+        </a-box>
+        <a-box id="suelo" position="0 -.5 -160" width="50" height="1" depth="50"
+            material="src: Png/Grass.png; repeat: 10 10;"
+            generar-linea-suelos="cantidad: 2; distancia: 50; direccion: -1 0 0">
+        </a-box>
+        <!-- Suelo Atras-->
+        <a-box id="suelo" position="30 -.5 2.5" width="50" height="1" depth="15"
+            material="src: Png/Floor.png; repeat: 10 4;"
+            generar-linea-suelos="cantidad: 2; distancia: 50; direccion: -1 0 0">
+        </a-box>
+        <a-box id="suelo" position="-97.5 -.5 2.5" width="5" height="1" depth="15"
+            material="src: Png/Floor.png; repeat: 1 4;"
+            generar-linea-suelos="cantidad: 1; distancia: 15; direccion: -1 0 0">
+        </a-box>
+        <!-- Suelo Izquierda -->
+        <a-box id="suelo" position="-92.5 -.5 -12.5" width="15" height="1" depth="15"
+            material="src: Png/Floor.png; repeat: 3 4;"
+            generar-linea-suelos="cantidad: 4; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <a-box id="suelo" position="-92.5 -.5 -82.5" width="15" height="1" depth="5"
+            material="src: Png/Floor.png; repeat: 3 1;"
+            generar-linea-suelos="cantidad: 6; distancia: 15; direccion: 1 0 0">
+        </a-box>
+
+        <!-- Suelo Derecha -->
+        <a-box id="suelo" position="47.5 -.5 -12.5" width="15" height="1" depth="15"
+            material="src: Png/Floor.png; repeat: 3 4;"
+            generar-linea-suelos="cantidad: 3; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <a-box id="suelo" position="47.5 -.5 -70" width="15" height="1" depth="10"
+            material="src: Png/Floor.png; repeat: 3 2;"
+            generar-linea-suelos="cantidad: 2; distancia: 15; direccion: -1 0 0">
+        </a-box>
+
+        <!-- Tierra Centro Pokemon -->
+        <a-box id="suelo" position="0 -.5 -15" width="20" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 4 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Casa Fila1 derecha-->
+        <a-box id="suelo" position="30 -.5 -15" width="20" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 4 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Casa Fila1 Izquierda -->
+        <a-box id="suelo" position="-30 -.5 -15" width="20" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 4 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Gym-->
+        <a-box id="suelo" position="-70 -.5 -15" width="30" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 6 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Teatro-->
+        <a-box id="suelo" position="0 -.5 -42.5" width="20" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 4 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Tienda Pokemon-->
+        <a-box id="suelo" position="30 -.5 -42.5" width="20" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 4 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Vacio Fila 2 -->
+        <a-box id="suelo" position="-30 -.5 -42.5" width="20" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 4 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Casa Fila 2 -->
+        <a-box id="suelo" position="-70 -.5 -42.5" width="30" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 6 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+
+        <!-- Tierra Casa Fila 3 Centro -->
+        <a-box id="suelo" position="-30 -.5 -70" width="20" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 4 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
+        <!-- Tierra Casa Fila 3 Izquierda -->
+        <a-box id="suelo" position="-70 -.5 -70" width="30" height="1" depth="20"
+            material="src: Png/Ground.png; repeat: 6 4;"
+            generar-linea-suelos="cantidad: 0aw; distancia: 15; direccion: 0 0 -1">
+        </a-box>
 
         <!-- Pokeball-->
         <a-entity id="pokeball" gltf-model="#pokeball" dynamic-body="mass: 1; shape: sphere" grabbable class="clickable"
