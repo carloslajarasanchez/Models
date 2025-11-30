@@ -12,7 +12,7 @@
     <script
         src="https://cdn.jsdelivr.net/gh/c-frame/aframe-particle-system-component@1.2.0/dist/aframe-particle-system-component.min.js"></script>
     <script src="https://unpkg.com/aframe-troika-text/dist/aframe-troika-text.min.js"></script>
-     <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
 </head>
 <script>
     // ==========================
@@ -315,6 +315,23 @@
                         clampWhenFinished: true
                     });
 
+                    // ─── 1b. Partículas de estrellas durante 1 segundo ───
+                    const stars = document.createElement('a-entity');
+                    stars.setAttribute('particle-system', {
+                        color: '#FFD700, #FFFFFF',// dorado y blanco
+                        particleCount: 50,
+                    });
+                    stars.setAttribute('position', this.el.getAttribute('position'));
+                    this.el.sceneEl.appendChild(stars);
+
+                    // Eliminar después de 1 segundo
+                    setTimeout(() => {
+                        if (stars.parentNode) {
+                            stars.parentNode.removeChild(stars);
+                        }
+                    }, 2000);
+
+
                     // ─── 2. Crear luz temporal en el Pokémon ───
                     const light = document.createElement('a-entity');
                     light.setAttribute('light', {
@@ -603,7 +620,12 @@
     //-------- Boton subir torre ---------------
     AFRAME.registerComponent('unlock-button', {
         init: function () {
-            this.el.setAttribute('material', 'color', 'gray');
+            // Estado inicial bloqueado → rojo emisivo
+            this.el.setAttribute('material', {
+                color: 'gray',
+                emissive: '#ff0000',
+                emissiveIntensity: 1
+            });
             this.el.setAttribute('clickable', '');
 
             // Guardamos la referencia del listener ya ligado al componente
@@ -611,7 +633,12 @@
 
             this.el.sceneEl.addEventListener('pokemonCaptured', (e) => {
                 if (e.detail.count >= 1) {
-                    this.el.setAttribute('material', 'color', 'green');
+                    // Estado desbloqueado → verde emisivo
+                    this.el.setAttribute('material', {
+                        color: 'gray',
+                        emissive: '#00ff00',
+                        emissiveIntensity: 1
+                    });
                     this.el.addEventListener('click', this.onClickBound);
                 }
             });
@@ -628,7 +655,12 @@
             // Desactivar el botón definitivamente
             this.el.removeEventListener('click', this.onClickBound);
             this.el.removeAttribute('clickable');
-            this.el.setAttribute('material', 'color', 'darkgray');
+            // Color apagado tras usarlo
+            this.el.setAttribute('material', {
+                color: 'darkgray',
+                emissive: '#222222',
+                emissiveIntensity: 0.3
+            });
         }
     });
 
@@ -809,12 +841,6 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Mesa.glb"></a-asset-item>
         </a-assets>
 
-        <!-- Player -->
-        <!--<a-entity id="player" position="0 1.6 0" camera look-controls wasd-controls="acceleration: 40"
-            kinematic-body="shape: cylinder; radius: 0.35; height: 1.6">
-            <a-cursor raycaster="objects: .clickable"></a-cursor>
-        </a-entity>-->
-
         <a-camera id="camera" position="0 1.6 0" look-controls wasd-controls="acceleration: 45">
             <a-entity id="hand-slot" position="0 -0.2 -1"></a-entity>
             <a-cursor fuse="false" raycaster="objects: .clickable" cursor-grab></a-cursor>
@@ -852,7 +878,6 @@
             particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:1000; size: .5; type: 1"></a-entity>
         <a-entity position="-30 0 -70"
             particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:1000; size: .5; type: 1"></a-entity>
-        <!--<a-entity position="0 0 -0" particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:2000"></a-entity>-->
         <!-- Audio -->
         <audio id="testAudio" src="Music/Ciudad-Iris.mp3" loop></audio>
 
@@ -1344,15 +1369,15 @@
         </a-entity>
         <!-- Pokeball-->
         <a-entity id="pokeball" gltf-model="#Pokeball" dynamic-body="mass: 1; shape: sphere" grabbable class="clickable"
-            position="0 1 -2" rotation="0 90 0" pokeball-logic="stopDelay:3000; pokemonDisappearDelay:1500"
+            position="-12.9 2 10.5" rotation="0 270 0" pokeball-logic="stopDelay:3000; pokemonDisappearDelay:1500"
             damping="linear: .2; angular: 1">
         </a-entity>
 
         <!-- Pokémon -->
         <a-entity id="Pokemons">
-            <a-entity id="totodile" gltf-model="#totodile" static-body scale=".07 .07 .07" class="pokemon"
+            <a-entity id="totodile" gltf-model="#totodile" static-body scale=".03 .03 .03" class="pokemon"
                 position="0 0 -85" pingpong-move-smooth="start: 0 0 -85; end: 10 0 -75; speed: 0.1; rotSpeed: 0.02"
-                capture-sound="Music/Cries-Totodile.mp3" animation-mixer="clip: Run; loop: repeat">
+                capture-sound="Music/Cries-Totodile.mp3" animation-mixer="clip: Run; loop: repeat; timeScale: 2">
             </a-entity>
 
             <a-entity id="cyndaquil" gltf-model="#cyndaquil" static-body scale="7 7 7" class="pokemon"
@@ -1365,17 +1390,15 @@
             </a-entity>
         </a-entity>
         <!-- Boton subida TODO: Implementar-->
-        <a-entity id="testButton" geometry="primitive: box; width: 0.5; height: 0.2; depth: 0.1" position="0 1 5"
-            unlock-button class="clickable"></a-entity>
+        <a-entity id="testButton" geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.1" position="-7.5 2 14"
+            unlock-button class="clickable">
+            <a-entity geometry="primitive: box; width: 0.6; height: 0.4; depth: 0.1" position="0 0 .1"
+                material="color: #000000"></a-entity>
+        </a-entity>
 
         <!-- Botón -->
         <a-box position="0 1 -2" depth="0.2" height="0.2" width="0.2" color="#333" class="clickable" boton-luces>
         </a-box>
-        <!-- Pokeball 
-        <a-entity id="pokeball" gltf-model="#Pokeball" dynamic-body="mass: 1; shape: sphere" grabbable class="clickable"
-            position="0 2 -2" rotation="0 90 0" pokeball-logic>
-        </a-entity>-->
-
 
         <!-- Suelo Collider -->
         <a-box id="sueloCollider" position="0 -0.5 -40" width="240" height="1" depth="200" color="#7BC8A4"
