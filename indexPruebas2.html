@@ -13,800 +13,967 @@
         src="https://cdn.jsdelivr.net/gh/c-frame/aframe-particle-system-component@1.2.0/dist/aframe-particle-system-component.min.js"></script>
     <script src="https://unpkg.com/aframe-troika-text/dist/aframe-troika-text.min.js"></script>
     <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-</head>
-<script>
-    // ==========================
-    //   COMPONENTE: Encender ventanas
-    // ==========================
-    AFRAME.registerComponent('encender-ventanas', {
-        init: function () {
-            this.encendidas = false;
-            this.colorOriginal = null;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 
-            this.luzInterior = null; // ← luz que se creará dentro del edificio
+    <script>
+        // ==========================
+        //   COMPONENTE: Encender ventanas
+        // ==========================
+        AFRAME.registerComponent('encender-ventanas', {
+            init: function () {
+                this.encendidas = false;
+                this.colorOriginal = null;
 
-            this.el.addEventListener('click', () => {
+                this.luzInterior = null; // ← luz que se creará dentro del edificio
+
+                this.el.addEventListener('click', () => {
+                    this.toggleLuces();
+                });
+            },
+
+            setLuces: function (estado) {
+                if (estado === this.encendidas) return;
                 this.toggleLuces();
-            });
-        },
+            },
 
-        setLuces: function (estado) {
-            if (estado === this.encendidas) return;
-            this.toggleLuces();
-        },
-
-        toggleLuces: function () {
-            const mesh = this.el.getObject3D('mesh');
-            if (!mesh) return;
-
-            mesh.traverse((node) => {
-                if (node.isMesh && node.name === 'Ventanas') {
-
-                    if (!this.colorOriginal) {
-                        this.colorOriginal = node.material.color.clone();
-                    }
-
-                    if (this.encendidas) {
-                        // APAGAR
-                        node.material.color.copy(this.colorOriginal);
-                        node.material.emissive.set('#000000');
-                        node.material.emissiveIntensity = 0;
-                    } else {
-                        // ENCENDER
-                        node.material.color.set('#FFD700');
-                        node.material.emissive.set('#FFD700');
-                        node.material.emissiveIntensity = 1.5;
-                    }
-
-                    node.material.needsUpdate = true;
-                }
-            });
-
-            // ==========================
-            //   ENCENDER / APAGAR LUZ INTERIOR
-            // ==========================
-            if (!this.encendidas) {
-                // Crear luz si no existe
-                this.luzInterior = document.createElement('a-entity');
-                this.luzInterior.setAttribute('light', {
-                    type: 'point',
-                    color: '#FFD700',
-                    intensity: 10,
-                    distance: 20,
-                    castshadow: true
-                });
-
-                // Posición aproximada dentro del edificio
-                this.luzInterior.setAttribute('position', '4 5 0');
-
-                this.el.appendChild(this.luzInterior);
-            } else {
-                // Eliminar luz al apagar
-                if (this.luzInterior) {
-                    this.el.removeChild(this.luzInterior);
-                    this.luzInterior = null;
-                }
-            }
-
-            this.encendidas = !this.encendidas;
-        }
-    });
-
-    // ==========================
-    //   COMPONENTE: Botón general luces
-    // ==========================
-    AFRAME.registerComponent('boton-luces', {
-        init: function () {
-            this.lucesEncendidas = false;
-
-            this.entorno = document.querySelector('#entorno');
-
-            this.el.addEventListener('click', () => {
-                this.lucesEncendidas = !this.lucesEncendidas;
-
-                // Encender/apagar edificios
-                const casas = document.querySelectorAll('[encender-ventanas]');
-                casas.forEach(casa => {
-                    casa.components['encender-ventanas'].setLuces(this.lucesEncendidas);
-                });
-
-                // Cambiar color del botón
-                this.el.setAttribute('material', 'color',
-                    this.lucesEncendidas ? '#FFD700' : '#333');
-
-                // ==========================
-                //   CAMBIO DE CIELO (DÍA ↔ NOCHE)
-                // ==========================
-                if (this.lucesEncendidas) {
-                    // NOCHE
-                    this.entorno.setAttribute('environment', {
-                        preset: 'starry',        // mantiene tu entorno
-                        skyType: 'atmosphere',   // necesario para estrellas
-                        lighting: 'dusk',
-                        stars: 5000,             // cantidad de estrellas (default del preset)
-                        starColor: '#ffffff',
-                        horizonColor: '#0a0a0a',
-                        skyColor: '#000010',
-                        fog: 0.6
-                    });
-                } else {
-                    // DÍA
-                    this.entorno.setAttribute('environment', {
-                        preset: 'starry',
-                        lighting: 'hemisphere',
-                        skyType: 'gradient',
-                        skyColor: '#88ccee',
-                        horizonColor: '#4F5F2',
-                        horizonColor: '#ffffff',
-                        stars: 0,        // desactivar estrellas
-                        fog: 0.2
-                    });
-                }
-            });
-        }
-    });
-
-    // ==========================
-    //   COMPONENTE: Rotar cartel
-    // ==========================
-    AFRAME.registerComponent('rotar-cartel', {
-        schema: {
-            speed: { type: 'number', default: 30 } // grados por segundo
-        },
-
-        init: function () {
-            this.cartelNode = null;
-
-            this.el.addEventListener('model-loaded', () => {
+            toggleLuces: function () {
                 const mesh = this.el.getObject3D('mesh');
                 if (!mesh) return;
 
-                // Buscar el nodo Cartel sin filtrar por tipo
                 mesh.traverse((node) => {
-                    if (node.name === 'Cartel') {
-                        this.cartelNode = node;
-                    }
-                });
+                    if (node.isMesh && node.name === 'Ventanas') {
 
-                if (!this.cartelNode) {
-                    console.warn("No se encontró un nodo llamado 'Cartel' en este modelo.");
-                }
-            });
-        },
-
-        tick: function (time, timeDelta) {
-            if (!this.cartelNode) return;
-
-            // Velocidad en radianes por milisegundo
-            const rad = THREE.MathUtils.degToRad(this.data.speed) * (timeDelta / 1000);
-
-            // Girar sobre su propio eje Y
-            this.cartelNode.rotation.y += rad;
-        }
-    });
-
-    AFRAME.registerComponent('debug-nodos', {
-        init: function () {
-            this.el.addEventListener('model-loaded', () => {
-                const mesh = this.el.getObject3D('mesh');
-
-                console.log("Nodos del modelo:");
-                mesh.traverse((node) => {
-                    if (node.isMesh || node.isObject3D) {
-                        console.log(node.name);
-                    }
-                });
-            });
-        }
-    });
-
-    AFRAME.registerComponent('generar-linea-arboles', {
-        schema: {
-            cantidad: { type: 'number', default: 10 },
-            distancia: { type: 'number', default: 5 },
-            direccion: { type: 'vec3', default: { x: 0, y: 0, z: 1 } },
-        },
-
-        init: function () {
-            const sceneEl = this.el.sceneEl;
-            const inicio = this.el.getAttribute('position');
-
-            for (let i = 1; i <= this.data.cantidad; i++) {
-                const arbol = document.createElement('a-entity');
-
-                // Copiar el modelo del árbol original
-                const modelo = this.el.getAttribute('gltf-model');
-                arbol.setAttribute('gltf-model', modelo);
-
-                // Posición del árbol
-                const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
-                const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
-                const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
-                arbol.setAttribute('position', `${posX} ${posY} ${posZ}`);
-
-                // Rotación aleatoria opcional
-                //arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
-
-                // Escala
-                const escala = this.el.getAttribute('scale');
-                arbol.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
-                arbol.setAttribute('static-body', 'shape:box');
-
-                sceneEl.appendChild(arbol);
-            }
-        }
-    });
-
-    AFRAME.registerComponent('generar-linea-lamparas', {
-        schema: {
-            cantidad: { type: 'number', default: 10 },
-            distancia: { type: 'number', default: 5 },
-            direccion: { type: 'vec3', default: { x: 0, y: 0, z: 1 } },
-        },
-
-        init: function () {
-            const sceneEl = this.el.sceneEl;
-            const inicio = this.el.getAttribute('position');
-
-            for (let i = 1; i <= this.data.cantidad; i++) {
-                const lampara = document.createElement('a-entity');
-
-                // Copiar el modelo del árbol original
-                const modelo = this.el.getAttribute('gltf-model');
-                lampara.setAttribute('gltf-model', modelo);
-
-                // Posición del árbol
-                const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
-                const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
-                const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
-                lampara.setAttribute('position', `${posX} ${posY} ${posZ}`);
-
-                // Rotación aleatoria opcional
-                //arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
-
-                // Escala
-                const escala = this.el.getAttribute('scale');
-                lampara.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
-                lampara.setAttribute('static-body', 'shape:box');
-                //lampara.setAttribute('class', 'clickable');
-                lampara.setAttribute('encender-ventanas', '');
-
-
-                sceneEl.appendChild(lampara);
-            }
-        }
-    });
-
-    // ==========================
-    //   INTERACCION POKEMONS
-    // ==========================
-    AFRAME.registerComponent('pokeball-logic', {
-        schema: {
-            stopDelay: { type: 'number', default: 1500 },
-            pokemonDisappearDelay: { type: 'number', default: 1000 },
-            shrinkDuration: { type: 'number', default: 700 } // duración de reducción
-        },
-
-        init: function () {
-            this.el.addEventListener('collide', (e) => {
-                const target = e.detail.body.el;
-
-                if (target && target.classList.contains('pokemon')) {
-
-                    // EVITAR MULTIPLES CAPTURAS
-                    if (target.isCaptured) return;
-                    target.isCaptured = true;
-
-                    //─── REPRODUCIR SONIDO DEL POKÉMON ───
-                    const soundURL = target.getAttribute('capture-sound');
-                    if (soundURL) {
-                        const audio = document.createElement('audio');
-                        audio.src = soundURL;
-                        audio.volume = 1.0;
-                        audio.play();
-                        audio.addEventListener('ended', () => audio.remove());
-                    }
-
-                    // ─── 1. Animación en la pokeball ───
-                    this.el.setAttribute('animation-mixer', {
-                        clip: 'ArribaAction',
-                        loop: 'once',
-                        crossFadeDuration: 0,
-                        clampWhenFinished: true
-                    });
-
-                    // ─── 1b. Partículas de estrellas durante 1 segundo ───
-                    const stars = document.createElement('a-entity');
-                    stars.setAttribute('particle-system', {
-                        color: '#FFD700, #FFFFFF',// dorado y blanco
-                        particleCount: 50,
-                    });
-                    stars.setAttribute('position', this.el.getAttribute('position'));
-                    this.el.sceneEl.appendChild(stars);
-
-                    // Eliminar después de 1 segundo
-                    setTimeout(() => {
-                        if (stars.parentNode) {
-                            stars.parentNode.removeChild(stars);
+                        if (!this.colorOriginal) {
+                            this.colorOriginal = node.material.color.clone();
                         }
-                    }, 2000);
 
+                        if (this.encendidas) {
+                            // APAGAR
+                            node.material.color.copy(this.colorOriginal);
+                            node.material.emissive.set('#000000');
+                            node.material.emissiveIntensity = 0;
+                        } else {
+                            // ENCENDER
+                            node.material.color.set('#FFD700');
+                            node.material.emissive.set('#FFD700');
+                            node.material.emissiveIntensity = 1.5;
+                        }
 
-                    // ─── 2. Crear luz temporal en el Pokémon ───
-                    const light = document.createElement('a-entity');
-                    light.setAttribute('light', {
+                        node.material.needsUpdate = true;
+                    }
+                });
+
+                // ==========================
+                //   ENCENDER / APAGAR LUZ INTERIOR
+                // ==========================
+                if (!this.encendidas) {
+                    // Crear luz si no existe
+                    this.luzInterior = document.createElement('a-entity');
+                    this.luzInterior.setAttribute('light', {
                         type: 'point',
+                        color: '#FFD700',
                         intensity: 10,
-                        distance: 5,
-                        color: '#f80000'
+                        distance: 20,
+                        castshadow: true
                     });
-                    light.setAttribute('position', '0 2 0');
-                    target.appendChild(light);
 
-                    // ─── 3. Cambiar material del Pokémon → emisivo + transparente ───
-                    target.object3D.traverse((node) => {
-                        if (node.isMesh) {
-                            node.originalMaterial = node.material;
-                            node.material = new THREE.MeshStandardMaterial({
-                                color: '#f80000',
-                                emissive: new THREE.Color('red'),
-                                emissiveIntensity: 10,
-                                transparent: true,
-                                opacity: 0.5,
-                                roughness: node.originalMaterial.roughness ?? 0.8,
-                                metalness: node.originalMaterial.metalness ?? 0
-                            });
+                    // Posición aproximada dentro del edificio
+                    this.luzInterior.setAttribute('position', '4 5 0');
+
+                    this.el.appendChild(this.luzInterior);
+                } else {
+                    // Eliminar luz al apagar
+                    if (this.luzInterior) {
+                        this.el.removeChild(this.luzInterior);
+                        this.luzInterior = null;
+                    }
+                }
+
+                this.encendidas = !this.encendidas;
+            }
+        });
+
+        // ==========================
+        //   COMPONENTE: Botón general luces
+        // ==========================
+        AFRAME.registerComponent('boton-luces', {
+            init: function () {
+                this.lucesEncendidas = false;
+
+                this.entorno = document.querySelector('#entorno');
+
+                this.el.addEventListener('click', () => {
+                    this.lucesEncendidas = !this.lucesEncendidas;
+
+                    // Encender/apagar edificios
+                    const casas = document.querySelectorAll('[encender-ventanas]');
+                    casas.forEach(casa => {
+                        casa.components['encender-ventanas'].setLuces(this.lucesEncendidas);
+                    });
+
+                    // Cambiar color del botón
+                    this.el.setAttribute('material', 'color',
+                        this.lucesEncendidas ? '#FFD700' : '#333');
+
+                    // ==========================
+                    //   CAMBIO DE CIELO (DÍA ↔ NOCHE)
+                    // ==========================
+                    if (this.lucesEncendidas) {
+                        // NOCHE
+                        this.entorno.setAttribute('environment', {
+                            preset: 'starry',        // mantiene tu entorno
+                            skyType: 'atmosphere',   // necesario para estrellas
+                            lighting: 'dusk',
+                            stars: 5000,             // cantidad de estrellas (default del preset)
+                            starColor: '#ffffff',
+                            horizonColor: '#0a0a0a',
+                            skyColor: '#000010',
+                            fog: 0.6
+                        });
+                    } else {
+                        // DÍA
+                        this.entorno.setAttribute('environment', {
+                            preset: 'starry',
+                            lighting: 'hemisphere',
+                            skyType: 'gradient',
+                            skyColor: '#88ccee',
+                            horizonColor: '#4F5F2',
+                            horizonColor: '#ffffff',
+                            stars: 0,        // desactivar estrellas
+                            fog: 0.2
+                        });
+                    }
+                });
+            }
+        });
+
+        // ==========================
+        //   COMPONENTE: Rotar cartel
+        // ==========================
+        AFRAME.registerComponent('rotar-cartel', {
+            schema: {
+                speed: { type: 'number', default: 30 } // grados por segundo
+            },
+
+            init: function () {
+                this.cartelNode = null;
+
+                this.el.addEventListener('model-loaded', () => {
+                    const mesh = this.el.getObject3D('mesh');
+                    if (!mesh) return;
+
+                    // Buscar el nodo Cartel sin filtrar por tipo
+                    mesh.traverse((node) => {
+                        if (node.name === 'Cartel') {
+                            this.cartelNode = node;
                         }
                     });
 
-                    // parar su movimiento ping-pong
-                    target.removeAttribute('pingpong-move-smooth');
+                    if (!this.cartelNode) {
+                        console.warn("No se encontró un nodo llamado 'Cartel' en este modelo.");
+                    }
+                });
+            },
 
-                    // ─── 4. Tras el tiempo, reducir poco a poco su escala ───
-                    setTimeout(() => {
+            tick: function (time, timeDelta) {
+                if (!this.cartelNode) return;
 
-                        const startScale = target.object3D.scale.clone();
-                        const duration = this.data.shrinkDuration;
-                        const startTime = performance.now();
+                // Velocidad en radianes por milisegundo
+                const rad = THREE.MathUtils.degToRad(this.data.speed) * (timeDelta / 1000);
 
-                        const shrinkTick = (now) => {
-                            const elapsed = now - startTime;
-                            let t = elapsed / duration;
-                            if (t > 1) t = 1;
+                // Girar sobre su propio eje Y
+                this.cartelNode.rotation.y += rad;
+            }
+        });
 
-                            const newScale = 1 - t;
-                            target.object3D.scale.set(
-                                startScale.x * newScale,
-                                startScale.y * newScale,
-                                startScale.z * newScale
-                            );
+        AFRAME.registerComponent('debug-nodos', {
+            init: function () {
+                this.el.addEventListener('model-loaded', () => {
+                    const mesh = this.el.getObject3D('mesh');
 
-                            if (t < 1) {
-                                requestAnimationFrame(shrinkTick);
-                            } else {
-                                // ─── 5. Quitar luz y "desactivar" Pokémon ───
-                                if (light.parentElement) light.parentElement.removeChild(light);
+                    console.log("Nodos del modelo:");
+                    mesh.traverse((node) => {
+                        if (node.isMesh || node.isObject3D) {
+                            console.log(node.name);
+                        }
+                    });
+                });
+            }
+        });
 
-                                target.setAttribute('visible', 'false');
-                                target.setAttribute('position', '0 -5 0');
+        AFRAME.registerComponent('generar-linea-arboles', {
+            schema: {
+                cantidad: { type: 'number', default: 10 },
+                distancia: { type: 'number', default: 5 },
+                direccion: { type: 'vec3', default: { x: 0, y: 0, z: 1 } },
+            },
 
-                                // ─── 6. Incrementar contador global ───
-                                const counterSystem = this.el.sceneEl.systems['pokemon-counter'];
-                                counterSystem.addCapture();
+            init: function () {
+                const sceneEl = this.el.sceneEl;
+                const inicio = this.el.getAttribute('position');
 
-                                // ─── 7. Volver animación Idle en la pokeball ───
-                                this.el.setAttribute('animation-mixer', {
-                                    clip: 'Idle',
-                                    loop: 'repeat'
+                for (let i = 1; i <= this.data.cantidad; i++) {
+                    const arbol = document.createElement('a-entity');
+
+                    // Copiar el modelo del árbol original
+                    const modelo = this.el.getAttribute('gltf-model');
+                    arbol.setAttribute('gltf-model', modelo);
+
+                    // Posición del árbol
+                    const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
+                    const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
+                    const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
+                    arbol.setAttribute('position', `${posX} ${posY} ${posZ}`);
+
+                    // Rotación aleatoria opcional
+                    //arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
+
+                    // Escala
+                    const escala = this.el.getAttribute('scale');
+                    arbol.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
+                    arbol.setAttribute('static-body', 'shape:box');
+
+                    sceneEl.appendChild(arbol);
+                }
+            }
+        });
+
+        AFRAME.registerComponent('generar-linea-lamparas', {
+            schema: {
+                cantidad: { type: 'number', default: 10 },
+                distancia: { type: 'number', default: 5 },
+                direccion: { type: 'vec3', default: { x: 0, y: 0, z: 1 } },
+            },
+
+            init: function () {
+                const sceneEl = this.el.sceneEl;
+                const inicio = this.el.getAttribute('position');
+
+                for (let i = 1; i <= this.data.cantidad; i++) {
+                    const lampara = document.createElement('a-entity');
+
+                    // Copiar el modelo del árbol original
+                    const modelo = this.el.getAttribute('gltf-model');
+                    lampara.setAttribute('gltf-model', modelo);
+
+                    // Posición del árbol
+                    const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
+                    const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
+                    const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
+                    lampara.setAttribute('position', `${posX} ${posY} ${posZ}`);
+
+                    // Rotación aleatoria opcional
+                    //arbol.setAttribute('rotation', `0 ${Math.random() * 360} 0`);
+
+                    // Escala
+                    const escala = this.el.getAttribute('scale');
+                    lampara.setAttribute('scale', `${escala.x} ${escala.y} ${escala.z}`);
+                    lampara.setAttribute('static-body', 'shape:box');
+                    //lampara.setAttribute('class', 'clickable');
+                    lampara.setAttribute('encender-ventanas', '');
+
+
+                    sceneEl.appendChild(lampara);
+                }
+            }
+        });
+
+        // ==========================
+        //   INTERACCION POKEMONS
+        // ==========================
+        AFRAME.registerComponent('pokeball-logic', {
+            schema: {
+                stopDelay: { type: 'number', default: 1500 },
+                pokemonDisappearDelay: { type: 'number', default: 1000 },
+                shrinkDuration: { type: 'number', default: 700 } // duración de reducción
+            },
+
+            init: function () {
+                this.el.addEventListener('collide', (e) => {
+                    const target = e.detail.body.el;
+
+                    if (target && target.classList.contains('pokemon')) {
+
+                        // EVITAR MULTIPLES CAPTURAS
+                        if (target.isCaptured) return;
+                        target.isCaptured = true;
+
+                        //─── REPRODUCIR SONIDO DEL POKÉMON ───
+                        const soundURL = target.getAttribute('capture-sound');
+                        if (soundURL) {
+                            const audio = document.createElement('audio');
+                            audio.src = soundURL;
+                            audio.volume = 1.0;
+                            audio.play();
+                            audio.addEventListener('ended', () => audio.remove());
+                        }
+
+                        // ─── 1. Animación en la pokeball ───
+                        this.el.setAttribute('animation-mixer', {
+                            clip: 'ArribaAction',
+                            loop: 'once',
+                            crossFadeDuration: 0,
+                            clampWhenFinished: true
+                        });
+
+                        // ─── 1b. Partículas de estrellas durante 1 segundo ───
+                        const stars = document.createElement('a-entity');
+                        stars.setAttribute('particle-system', {
+                            color: '#FFD700, #FFFFFF',// dorado y blanco
+                            particleCount: 50,
+                        });
+                        stars.setAttribute('position', this.el.getAttribute('position'));
+                        this.el.sceneEl.appendChild(stars);
+
+                        // Eliminar después de 1 segundo
+                        setTimeout(() => {
+                            if (stars.parentNode) {
+                                stars.parentNode.removeChild(stars);
+                            }
+                        }, 2000);
+
+
+                        // ─── 2. Crear luz temporal en el Pokémon ───
+                        const light = document.createElement('a-entity');
+                        light.setAttribute('light', {
+                            type: 'point',
+                            intensity: 10,
+                            distance: 5,
+                            color: '#f80000'
+                        });
+                        light.setAttribute('position', '0 2 0');
+                        target.appendChild(light);
+
+                        // ─── 3. Cambiar material del Pokémon → emisivo + transparente ───
+                        target.object3D.traverse((node) => {
+                            if (node.isMesh) {
+                                node.originalMaterial = node.material;
+                                node.material = new THREE.MeshStandardMaterial({
+                                    color: '#f80000',
+                                    emissive: new THREE.Color('red'),
+                                    emissiveIntensity: 10,
+                                    transparent: true,
+                                    opacity: 0.5,
+                                    roughness: node.originalMaterial.roughness ?? 0.8,
+                                    metalness: node.originalMaterial.metalness ?? 0
                                 });
                             }
-                        };
+                        });
 
-                        requestAnimationFrame(shrinkTick);
+                        // parar su movimiento ping-pong
+                        target.removeAttribute('pingpong-move-smooth');
 
-                    }, this.data.pokemonDisappearDelay);
+                        // ─── 4. Tras el tiempo, reducir poco a poco su escala ───
+                        setTimeout(() => {
 
-                    // ─── 8. Detener la pokeball automáticamente ───
-                    setTimeout(() => {
-                        if (this.el && this.el.body) {
-                            const rampDuration = 2000;   // ms para completar la rampa
-                            const interval = 50;         // ms entre pasos
-                            const targetLinear = 0.5;    // damping final deseado
-                            const targetAngular = 0.5;
+                            const startScale = target.object3D.scale.clone();
+                            const duration = this.data.shrinkDuration;
+                            const startTime = performance.now();
 
-                            const initialLinear = this.el.body.linearDamping || 0;
-                            const initialAngular = this.el.body.angularDamping || 0;
-                            let elapsed = 0;
+                            const shrinkTick = (now) => {
+                                const elapsed = now - startTime;
+                                let t = elapsed / duration;
+                                if (t > 1) t = 1;
 
-                            const ramp = setInterval(() => {
-                                if (!this.el.body) { clearInterval(ramp); return; }
-                                elapsed += interval;
-                                const t = Math.min(elapsed / rampDuration, 1); // 0→1
+                                const newScale = 1 - t;
+                                target.object3D.scale.set(
+                                    startScale.x * newScale,
+                                    startScale.y * newScale,
+                                    startScale.z * newScale
+                                );
 
-                                // Interpolación lineal del damping
-                                this.el.body.linearDamping = initialLinear + (targetLinear - initialLinear) * t;
-                                this.el.body.angularDamping = initialAngular + (targetAngular - initialAngular) * t;
+                                if (t < 1) {
+                                    requestAnimationFrame(shrinkTick);
+                                } else {
+                                    // ─── 5. Quitar luz y "desactivar" Pokémon ───
+                                    if (light.parentElement) light.parentElement.removeChild(light);
 
-                                // Dormir cuando esté prácticamente parado
-                                const v = this.el.body.velocity.length();
-                                const w = this.el.body.angularVelocity.length();
-                                if (v < 0.02 && w < 0.02) {
-                                    this.el.body.sleep();
-                                    clearInterval(ramp);
-                                } else if (t === 1) {
-                                    // Si completó la rampa y aún no está parado, sigue chequeando cada 100ms
-                                    const hold = setInterval(() => {
-                                        if (!this.el.body) { clearInterval(hold); return; }
-                                        const vv = this.el.body.velocity.length();
-                                        const ww = this.el.body.angularVelocity.length();
-                                        if (vv < 0.02 && ww < 0.02) {
-                                            this.el.body.sleep();
-                                            clearInterval(hold);
-                                        }
-                                    }, 100);
-                                    clearInterval(ramp);
+                                    target.setAttribute('visible', 'false');
+                                    target.setAttribute('position', '0 -5 0');
+
+                                    // ─── 6. Incrementar contador global ───
+                                    const counterSystem = this.el.sceneEl.systems['pokemon-counter'];
+                                    counterSystem.addCapture();
+
+                                    // ─── 7. Volver animación Idle en la pokeball ───
+                                    this.el.setAttribute('animation-mixer', {
+                                        clip: 'Idle',
+                                        loop: 'repeat'
+                                    });
                                 }
-                            }, interval);
-                        }
-                    }, this.data.stopDelay);
-                }
-            });
-        }
-    });
+                            };
 
-    AFRAME.registerComponent('cursor-grab', {
-        init: function () {
-            const cameraEl = document.querySelector('#camera');
-            this.grabbedBall = null;
+                            requestAnimationFrame(shrinkTick);
 
-            // ────── CLICK PARA COGER ──────
-            this.el.addEventListener('click', (e) => {
-                const intersected = e.detail.intersectedEl;
-                if (!intersected || !intersected.classList.contains('clickable') ||
-                    !intersected.hasAttribute('pokeball-logic')) return;
+                        }, this.data.pokemonDisappearDelay);
 
-                if (!intersected.isGrabbed) {
-                    intersected.isGrabbed = true;
-                    this.grabbedBall = intersected;
+                        // ─── 8. Detener la pokeball automáticamente ───
+                        setTimeout(() => {
+                            if (this.el && this.el.body) {
+                                const rampDuration = 2000;   // ms para completar la rampa
+                                const interval = 50;         // ms entre pasos
+                                const targetLinear = 0.5;    // damping final deseado
+                                const targetAngular = 0.5;
 
-                    // Quitar físicas
-                    intersected.removeAttribute('dynamic-body');
+                                const initialLinear = this.el.body.linearDamping || 0;
+                                const initialAngular = this.el.body.angularDamping || 0;
+                                let elapsed = 0;
 
-                    // Añadir a la cámara para que siga
-                    cameraEl.object3D.add(intersected.object3D);
-                    intersected.object3D.position.set(0, 0.1, -1);
-                    intersected.object3D.rotation.set(0, 1.55, 0);
-                }
-            });
+                                const ramp = setInterval(() => {
+                                    if (!this.el.body) { clearInterval(ramp); return; }
+                                    elapsed += interval;
+                                    const t = Math.min(elapsed / rampDuration, 1); // 0→1
 
-            // ────── ESPACIO PARA SOLTAR ──────
-            window.addEventListener('keydown', (evt) => {
-                if (evt.code === 'Space' && this.grabbedBall) {
-                    const ball = this.grabbedBall;
-                    ball.isGrabbed = false;
+                                    // Interpolación lineal del damping
+                                    this.el.body.linearDamping = initialLinear + (targetLinear - initialLinear) * t;
+                                    this.el.body.angularDamping = initialAngular + (targetAngular - initialAngular) * t;
 
-                    // Guardamos la posición actual de la bola (donde está delante de la cámara)
-                    const currentPos = new THREE.Vector3();
-                    ball.object3D.getWorldPosition(currentPos);
-
-                    // Quitar de la cámara y añadir al root
-                    const sceneObj = document.querySelector('a-scene').object3D;
-                    sceneObj.add(ball.object3D);
-                    ball.object3D.position.copy(currentPos);
-
-                    // Activar física
-                    ball.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
-
-                    // Lanzar hacia adelante + un poco hacia arriba según cámara
-                    const cameraObj = cameraEl.object3D;
-                    const forward = new THREE.Vector3(0, 0, -1);
-                    forward.applyQuaternion(cameraObj.quaternion);
-                    forward.normalize().multiplyScalar(5); // fuerza
-                    forward.y += 2; // un poco de elevación
-                    ball.body.velocity.set(forward.x, forward.y, forward.z);
-
-                    this.grabbedBall = null;
-
-                    // ─── 8. Detener la pokeball automáticamente ───
-                    setTimeout(() => {
-                        if (ball && ball.body) {
-                            const rampDuration = 2000;   // ms para completar la rampa
-                            const interval = 50;         // ms entre pasos
-                            const targetLinear = 0.5;    // damping final deseado
-                            const targetAngular = 0.5;
-
-                            const initialLinear = ball.body.linearDamping || 0;
-                            const initialAngular = ball.body.angularDamping || 0;
-                            let elapsed = 0;
-
-                            const ramp = setInterval(() => {
-                                if (!ball.body) { clearInterval(ramp); return; }
-                                elapsed += interval;
-                                const t = Math.min(elapsed / rampDuration, 1); // 0→1
-
-                                // Interpolación lineal del damping
-                                ball.body.linearDamping = initialLinear + (targetLinear - initialLinear) * t;
-                                ball.body.angularDamping = initialAngular + (targetAngular - initialAngular) * t;
-
-                                // Dormir cuando esté prácticamente parado
-                                const v = ball.body.velocity.length();
-                                const w = ball.body.angularVelocity.length();
-                                if (v < 0.02 && w < 0.02) {
-                                    ball.body.sleep();
-                                    clearInterval(ramp);
-                                } else if (t === 1) {
-                                    // Si completó la rampa y aún no está parado, sigue chequeando cada 100ms
-                                    const hold = setInterval(() => {
-                                        if (!ball.body) { clearInterval(hold); return; }
-                                        const vv = ball.body.velocity.length();
-                                        const ww = ball.body.angularVelocity.length();
-                                        if (vv < 0.02 && ww < 0.02) {
-                                            ball.body.sleep();
-                                            clearInterval(hold);
-                                        }
-                                    }, 100);
-                                    clearInterval(ramp);
-                                }
-                            }, interval);
-                        }
-                    }, 5000);
-
-                }
-
-
-            });
-        }
-
-    });
-
-    // ────── ESPACIO PARA SOLTAR ──────
-    window.addEventListener('keydown', (evt) => {
-        if (evt.code === 'Space' && this.grabbedBall) {
-            const ball = this.grabbedBall;
-            ball.isGrabbed = false;
-
-            // Quitar de la cámara y añadir al root
-            const sceneObj = document.querySelector('a-scene').object3D;
-            sceneObj.add(ball.object3D);
-
-            // Activar física
-            ball.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
-
-            // Lanzar hacia adelante según cámara
-            const cameraObj = cameraEl.object3D;
-            const forward = new THREE.Vector3(0, .5, -1);
-            forward.applyQuaternion(cameraObj.quaternion);
-            forward.multiplyScalar(5); // fuerza de lanzamiento
-            ball.body.velocity.set(forward.x, forward.y + 2, forward.z);
-
-            this.grabbedBall = null;
-        }
-    });
-
-
-    AFRAME.registerComponent("damping", {
-        schema: {
-            linear: { type: "number", default: 0.1 },
-            angular: { type: "number", default: 0.1 }
-        },
-
-        init: function () {
-            const body = this.el.body;
-            if (!body) {
-                this.el.addEventListener("body-loaded", () => {
-                    this.el.body.linearDamping = this.data.linear;
-                    this.el.body.angularDamping = this.data.angular;
+                                    // Dormir cuando esté prácticamente parado
+                                    const v = this.el.body.velocity.length();
+                                    const w = this.el.body.angularVelocity.length();
+                                    if (v < 0.02 && w < 0.02) {
+                                        this.el.body.sleep();
+                                        clearInterval(ramp);
+                                    } else if (t === 1) {
+                                        // Si completó la rampa y aún no está parado, sigue chequeando cada 100ms
+                                        const hold = setInterval(() => {
+                                            if (!this.el.body) { clearInterval(hold); return; }
+                                            const vv = this.el.body.velocity.length();
+                                            const ww = this.el.body.angularVelocity.length();
+                                            if (vv < 0.02 && ww < 0.02) {
+                                                this.el.body.sleep();
+                                                clearInterval(hold);
+                                            }
+                                        }, 100);
+                                        clearInterval(ramp);
+                                    }
+                                }, interval);
+                            }
+                        }, this.data.stopDelay);
+                    }
                 });
-                return;
+            }
+        });
+
+        AFRAME.registerComponent('cursor-grab', {
+            init: function () {
+                const cameraEl = document.querySelector('#camera');
+                this.grabbedBall = null;
+
+                // ────── CLICK PARA COGER ──────
+                this.el.addEventListener('click', (e) => {
+                    const intersected = e.detail.intersectedEl;
+                    if (!intersected || !intersected.classList.contains('clickable') ||
+                        !intersected.hasAttribute('pokeball-logic')) return;
+
+                    if (!intersected.isGrabbed) {
+                        intersected.isGrabbed = true;
+                        this.grabbedBall = intersected;
+
+                        // Quitar físicas
+                        intersected.removeAttribute('dynamic-body');
+
+                        // Añadir a la cámara para que siga
+                        cameraEl.object3D.add(intersected.object3D);
+                        intersected.object3D.position.set(0, 0.1, -1);
+                        intersected.object3D.rotation.set(0, 1.55, 0);
+                    }
+                });
+
+                // ────── ESPACIO PARA SOLTAR ──────
+                window.addEventListener('keydown', (evt) => {
+                    if (evt.code === 'Space' && this.grabbedBall) {
+                        const ball = this.grabbedBall;
+                        ball.isGrabbed = false;
+
+                        // Guardamos la posición actual de la bola (donde está delante de la cámara)
+                        const currentPos = new THREE.Vector3();
+                        ball.object3D.getWorldPosition(currentPos);
+
+                        // Quitar de la cámara y añadir al root
+                        const sceneObj = document.querySelector('a-scene').object3D;
+                        sceneObj.add(ball.object3D);
+                        ball.object3D.position.copy(currentPos);
+
+                        // Activar física
+                        ball.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
+
+                        // Lanzar hacia adelante + un poco hacia arriba según cámara
+                        const cameraObj = cameraEl.object3D;
+                        const forward = new THREE.Vector3(0, 0, -1);
+                        forward.applyQuaternion(cameraObj.quaternion);
+                        forward.normalize().multiplyScalar(5); // fuerza
+                        forward.y += 2; // un poco de elevación
+                        ball.body.velocity.set(forward.x, forward.y, forward.z);
+
+                        this.grabbedBall = null;
+
+                        // ─── 8. Detener la pokeball automáticamente ───
+                        setTimeout(() => {
+                            if (ball && ball.body) {
+                                const rampDuration = 2000;   // ms para completar la rampa
+                                const interval = 50;         // ms entre pasos
+                                const targetLinear = 0.5;    // damping final deseado
+                                const targetAngular = 0.5;
+
+                                const initialLinear = ball.body.linearDamping || 0;
+                                const initialAngular = ball.body.angularDamping || 0;
+                                let elapsed = 0;
+
+                                const ramp = setInterval(() => {
+                                    if (!ball.body) { clearInterval(ramp); return; }
+                                    elapsed += interval;
+                                    const t = Math.min(elapsed / rampDuration, 1); // 0→1
+
+                                    // Interpolación lineal del damping
+                                    ball.body.linearDamping = initialLinear + (targetLinear - initialLinear) * t;
+                                    ball.body.angularDamping = initialAngular + (targetAngular - initialAngular) * t;
+
+                                    // Dormir cuando esté prácticamente parado
+                                    const v = ball.body.velocity.length();
+                                    const w = ball.body.angularVelocity.length();
+                                    if (v < 0.02 && w < 0.02) {
+                                        ball.body.sleep();
+                                        clearInterval(ramp);
+                                    } else if (t === 1) {
+                                        // Si completó la rampa y aún no está parado, sigue chequeando cada 100ms
+                                        const hold = setInterval(() => {
+                                            if (!ball.body) { clearInterval(hold); return; }
+                                            const vv = ball.body.velocity.length();
+                                            const ww = ball.body.angularVelocity.length();
+                                            if (vv < 0.02 && ww < 0.02) {
+                                                ball.body.sleep();
+                                                clearInterval(hold);
+                                            }
+                                        }, 100);
+                                        clearInterval(ramp);
+                                    }
+                                }, interval);
+                            }
+                        }, 5000);
+
+                    }
+
+
+                });
             }
 
-            body.linearDamping = this.data.linear;
-            body.angularDamping = this.data.angular;
-        }
-    });
+        });
 
-    //------ Suma de pokemon capturados ------
-    AFRAME.registerSystem('pokemon-counter', {
-        schema: { count: { type: 'int', default: 0 } },
+        // ────── ESPACIO PARA SOLTAR ──────
+        window.addEventListener('keydown', (evt) => {
+            if (evt.code === 'Space' && this.grabbedBall) {
+                const ball = this.grabbedBall;
+                ball.isGrabbed = false;
 
-        addCapture: function () {
-            this.data.count += 1;
-            console.log('Contador: ', this.data.count);
-            // Emitimos un evento global con la cantidad
-            this.el.sceneEl.emit('pokemonCaptured', { count: this.data.count });
-        }
-    });
+                // Quitar de la cámara y añadir al root
+                const sceneObj = document.querySelector('a-scene').object3D;
+                sceneObj.add(ball.object3D);
 
-    //-------- Boton subir torre ---------------
-    AFRAME.registerComponent('unlock-button', {
-        init: function () {
-            // Estado inicial bloqueado → rojo emisivo
-            this.el.setAttribute('material', {
-                color: 'gray',
-                emissive: '#ff0000',
-                emissiveIntensity: 1
-            });
-            this.el.setAttribute('clickable', '');
+                // Activar física
+                ball.setAttribute('dynamic-body', 'mass: 1; shape: sphere');
 
-            // Guardamos la referencia del listener ya ligado al componente
-            this.onClickBound = this.onClick.bind(this);
+                // Lanzar hacia adelante según cámara
+                const cameraObj = cameraEl.object3D;
+                const forward = new THREE.Vector3(0, .5, -1);
+                forward.applyQuaternion(cameraObj.quaternion);
+                forward.multiplyScalar(5); // fuerza de lanzamiento
+                ball.body.velocity.set(forward.x, forward.y + 2, forward.z);
 
-            this.el.sceneEl.addEventListener('pokemonCaptured', (e) => {
-                if (e.detail.count >= 3) {
-                    // Estado desbloqueado → verde emisivo
-                    this.el.setAttribute('material', {
-                        color: 'gray',
-                        emissive: '#00ff00',
-                        emissiveIntensity: 1
+                this.grabbedBall = null;
+            }
+        });
+
+
+        AFRAME.registerComponent("damping", {
+            schema: {
+                linear: { type: "number", default: 0.1 },
+                angular: { type: "number", default: 0.1 }
+            },
+
+            init: function () {
+                const body = this.el.body;
+                if (!body) {
+                    this.el.addEventListener("body-loaded", () => {
+                        this.el.body.linearDamping = this.data.linear;
+                        this.el.body.angularDamping = this.data.angular;
                     });
-                    this.el.addEventListener('click', this.onClickBound);
+                    return;
                 }
-            });
-        },
 
-        onClick: function () {
-            console.log('Botón físico pulsado!');
-            const puertaIzq = document.querySelector('#puertaIzq');
-            const puertaDer = document.querySelector('#puertaDer');
-
-            if (puertaIzq) puertaIzq.emit('open-door');
-            if (puertaDer) puertaDer.emit('open-door');
-
-            // Desactivar el botón definitivamente
-            this.el.removeEventListener('click', this.onClickBound);
-            this.el.removeAttribute('clickable');
-            // Color apagado tras usarlo
-            this.el.setAttribute('material', {
-                color: 'darkgray',
-                emissive: '#222222',
-                emissiveIntensity: 0.3
-            });
-        }
-    });
-
-
-
-    //-------- Boton subir torre ---------------
-    AFRAME.registerComponent('generar-linea-suelos', {
-        schema: {
-            cantidad: { type: 'number', default: 3 },       // número de copias
-            distancia: { type: 'number', default: 55 },     // separación
-            direccion: { type: 'vec3', default: { x: 1, y: 0, z: 0 } } // vector dirección
-        },
-        init: function () {
-            const sceneEl = this.el.sceneEl;
-            const inicio = this.el.getAttribute('position');
-
-            // atributos base del suelo original
-            const width = this.el.getAttribute('width');
-            const height = this.el.getAttribute('height');
-            const depth = this.el.getAttribute('depth');
-            const material = this.el.getAttribute('material');
-            const escala = this.el.getAttribute('scale');
-
-            for (let i = 1; i <= this.data.cantidad; i++) {
-                const suelo = document.createElement('a-box');
-
-                // copiar atributos principales
-                suelo.setAttribute('width', width);
-                suelo.setAttribute('height', height);
-                suelo.setAttribute('depth', depth);
-                suelo.setAttribute('material', material);
-                suelo.setAttribute('scale', escala);
-                suelo.setAttribute('shadow', 'receive: true');
-
-                // calcular posición según dirección y distancia
-                const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
-                const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
-                const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
-                suelo.setAttribute('position', `${posX} ${posY} ${posZ}`);
-
-                sceneEl.appendChild(suelo);
+                body.linearDamping = this.data.linear;
+                body.angularDamping = this.data.angular;
             }
-        }
-    });
+        });
 
+        //------ Suma de pokemon capturados ------
+        AFRAME.registerSystem('pokemon-counter', {
+            schema: { count: { type: 'int', default: 0 } },
 
-    //Metodo para repetir modelo
-    AFRAME.registerComponent('repeat', {
-        schema: {
-            count: { type: 'int', default: 3 },          // número de copias
-            spacing: { type: 'number', default: 5 },       // separación
-            direction: { type: 'vec3', default: { x: 1, y: 0, z: 0 } } // vector dirección
-        },
-        init: function () {
-            const parent = this.el;
-            const attrs = parent.getAttributeNames(); // atributos del padre
-            const pos = parent.getAttribute('position');
+            addCapture: function () {
+                this.data.count += 1;
+                console.log('Contador: ', this.data.count);
+                // Emitimos un evento global con la cantidad
+                this.el.sceneEl.emit('pokemonCaptured', { count: this.data.count });
+            }
+        });
 
-            for (let i = 1; i <= this.data.count; i++) {
-                const clone = document.createElement(parent.tagName.toLowerCase());
-
-                // copiar atributos del padre
-                attrs.forEach(attr => {
-                    clone.setAttribute(attr, parent.getAttribute(attr));
+        AFRAME.registerComponent('unlock-button', {
+            init: function () {
+                // Estado inicial bloqueado → rojo emisivo
+                this.el.setAttribute('material', {
+                    color: 'gray',
+                    emissive: '#ff0000',
+                    emissiveIntensity: 1
                 });
+                this.el.setAttribute('clickable', '');
 
-                // calcular nueva posición
-                clone.setAttribute('position', {
-                    x: pos.x + i * this.data.spacing * this.data.direction.x,
-                    y: pos.y + i * this.data.spacing * this.data.direction.y,
-                    z: pos.z + i * this.data.spacing * this.data.direction.z
+                this.onClickBound = this.onClick.bind(this);
+
+                this.el.sceneEl.addEventListener('pokemonCaptured', (e) => {
+                    if (e.detail.count >= 3) {
+                        // Estado desbloqueado → verde emisivo
+                        this.el.setAttribute('material', {
+                            color: 'gray',
+                            emissive: '#00ff00',
+                            emissiveIntensity: 1
+                        });
+                        this.el.addEventListener('click', this.onClickBound);
+                    }
                 });
+            },
 
-                parent.sceneEl.appendChild(clone);
+            onClick: function () {
+                console.log('Botón físico pulsado!');
+                const puertaIzq = document.querySelector('#puertaIzq');
+                const puertaDer = document.querySelector('#puertaDer');
+
+                if (puertaIzq) puertaIzq.emit('open-door');
+                if (puertaDer) puertaDer.emit('open-door');
+
+                // Crear Ho-oh en la escena
+                const hooh = document.createElement('a-entity');
+                hooh.setAttribute('id', 'Hooh');
+                hooh.setAttribute('gltf-model', '#Ho-oh');
+                hooh.setAttribute('position', '0 70 -30');
+                hooh.setAttribute('scale', '.2 .2 .2');
+                hooh.setAttribute('animation-mixer', 'clip: Take 001; loop: repeat');
+
+                // Añadir luz dorada como hijo
+                const light = document.createElement('a-entity');
+                light.setAttribute('light', {
+                    type: 'point',
+                    color: '#FFD700',       // dorado
+                    intensity: 5,
+                    position: '0 0 1',
+                    distance: 30
+                });
+                light.setAttribute('position', '0 2 0'); // un poco encima del modelo
+                hooh.appendChild(light);
+
+                this.el.sceneEl.appendChild(hooh);
+
+                // Desactivar el botón definitivamente
+                this.el.removeEventListener('click', this.onClickBound);
+                this.el.removeAttribute('clickable');
+                this.el.setAttribute('material', {
+                    color: 'darkgray',
+                    emissive: '#222222',
+                    emissiveIntensity: 0.3
+                });
             }
-        }
-    });
+        });
 
-    AFRAME.registerComponent('pingpong-move-smooth', {
-        schema: {
-            start: { type: 'vec3', default: { x: 0, y: 0, z: -5 } },
-            end: { type: 'vec3', default: { x: 1, y: 0, z: -10 } },
-            speed: { type: 'number', default: 0.05 },   // velocidad de movimiento (unidades por ms)
-            rotSpeed: { type: 'number', default: 0.05 } // velocidad de rotación
-        },
-        init: function () {
-            this.forward = true;
-            this.state = 'moving';
-            this.target = new THREE.Vector3();
-            this.el.object3D.position.copy(this.data.start);
-            this.setTarget();
-        },
-        setTarget: function () {
-            const start = new THREE.Vector3(this.data.start.x, this.data.start.y, this.data.start.z);
-            const end = new THREE.Vector3(this.data.end.x, this.data.end.y, this.data.end.z);
-            this.target.copy(this.forward ? end : start);
+        //-------- Boton subir torre ---------------
+        AFRAME.registerComponent('generar-linea-suelos', {
+            schema: {
+                cantidad: { type: 'number', default: 3 },       // número de copias
+                distancia: { type: 'number', default: 55 },     // separación
+                direccion: { type: 'vec3', default: { x: 1, y: 0, z: 0 } } // vector dirección
+            },
+            init: function () {
+                const sceneEl = this.el.sceneEl;
+                const inicio = this.el.getAttribute('position');
 
-            // Rotación deseada hacia el objetivo
-            const direction = new THREE.Vector3().subVectors(this.target, this.el.object3D.position);
-            const yRotation = Math.atan2(direction.x, direction.z);
-            this.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yRotation, 0));
-            this.state = 'turning';
-        },
-        tick: function (time, delta) {
-            const obj = this.el.object3D;
+                // atributos base del suelo original
+                const width = this.el.getAttribute('width');
+                const height = this.el.getAttribute('height');
+                const depth = this.el.getAttribute('depth');
+                const material = this.el.getAttribute('material');
+                const escala = this.el.getAttribute('scale');
 
-            if (this.state === 'turning') {
-                obj.quaternion.slerp(this.targetQuat, this.data.rotSpeed);
-                if (obj.quaternion.angleTo(this.targetQuat) < 0.01) {
-                    obj.quaternion.copy(this.targetQuat);
-                    this.state = 'moving';
-                }
-            } else if (this.state === 'moving') {
-                // Dirección normalizada hacia el objetivo
-                const direction = new THREE.Vector3().subVectors(this.target, obj.position).normalize();
-                // Avance constante según velocidad y delta
-                obj.position.addScaledVector(direction, this.data.speed * (delta / 16.67));
-                // (delta/16.67) ≈ normalización a 60fps
+                for (let i = 1; i <= this.data.cantidad; i++) {
+                    const suelo = document.createElement('a-box');
 
-                if (obj.position.distanceTo(this.target) < 0.05) {
-                    this.forward = !this.forward;
-                    this.setTarget();
+                    // copiar atributos principales
+                    suelo.setAttribute('width', width);
+                    suelo.setAttribute('height', height);
+                    suelo.setAttribute('depth', depth);
+                    suelo.setAttribute('material', material);
+                    suelo.setAttribute('scale', escala);
+                    suelo.setAttribute('shadow', 'receive: true');
+
+                    // calcular posición según dirección y distancia
+                    const posX = inicio.x + this.data.direccion.x * this.data.distancia * i;
+                    const posY = inicio.y + this.data.direccion.y * this.data.distancia * i;
+                    const posZ = inicio.z + this.data.direccion.z * this.data.distancia * i;
+                    suelo.setAttribute('position', `${posX} ${posY} ${posZ}`);
+
+                    sceneEl.appendChild(suelo);
                 }
             }
-        }
-    });
-
-    AFRAME.registerComponent('pokemon-text-counter', {
-        schema: {
-            max: { type: 'int', default: 3 } // número total de pokémon a capturar
-        },
-
-        init: function () {
-            // Inicializar el texto en 0/max
-            this.el.setAttribute('troika-text', 'value', `0 / ${this.data.max}`);
-
-            // Escuchar el evento global
-            this.el.sceneEl.addEventListener('pokemonCaptured', (e) => {
-                const count = e.detail.count;
-                this.el.setAttribute('troika-text', 'value', `${count} / ${this.data.max}`);
-            });
-        }
-    });
+        });
 
 
-</script>
+        //Metodo para repetir modelo
+        AFRAME.registerComponent('repeat', {
+            schema: {
+                count: { type: 'int', default: 3 },          // número de copias
+                spacing: { type: 'number', default: 5 },       // separación
+                direction: { type: 'vec3', default: { x: 1, y: 0, z: 0 } } // vector dirección
+            },
+            init: function () {
+                const parent = this.el;
+                const attrs = parent.getAttributeNames(); // atributos del padre
+                const pos = parent.getAttribute('position');
+
+                for (let i = 1; i <= this.data.count; i++) {
+                    const clone = document.createElement(parent.tagName.toLowerCase());
+
+                    // copiar atributos del padre
+                    attrs.forEach(attr => {
+                        clone.setAttribute(attr, parent.getAttribute(attr));
+                    });
+
+                    // calcular nueva posición
+                    clone.setAttribute('position', {
+                        x: pos.x + i * this.data.spacing * this.data.direction.x,
+                        y: pos.y + i * this.data.spacing * this.data.direction.y,
+                        z: pos.z + i * this.data.spacing * this.data.direction.z
+                    });
+
+                    parent.sceneEl.appendChild(clone);
+                }
+            }
+        });
+
+        AFRAME.registerComponent('pingpong-move-smooth', {
+            schema: {
+                start: { type: 'vec3', default: { x: 0, y: 0, z: -5 } },
+                end: { type: 'vec3', default: { x: 1, y: 0, z: -10 } },
+                speed: { type: 'number', default: 0.05 },   // velocidad de movimiento (unidades por ms)
+                rotSpeed: { type: 'number', default: 0.05 } // velocidad de rotación
+            },
+            init: function () {
+                this.forward = true;
+                this.state = 'moving';
+                this.target = new THREE.Vector3();
+                this.el.object3D.position.copy(this.data.start);
+                this.setTarget();
+            },
+            setTarget: function () {
+                const start = new THREE.Vector3(this.data.start.x, this.data.start.y, this.data.start.z);
+                const end = new THREE.Vector3(this.data.end.x, this.data.end.y, this.data.end.z);
+                this.target.copy(this.forward ? end : start);
+
+                // Rotación deseada hacia el objetivo
+                const direction = new THREE.Vector3().subVectors(this.target, this.el.object3D.position);
+                const yRotation = Math.atan2(direction.x, direction.z);
+                this.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yRotation, 0));
+                this.state = 'turning';
+            },
+            tick: function (time, delta) {
+                const obj = this.el.object3D;
+
+                if (this.state === 'turning') {
+                    obj.quaternion.slerp(this.targetQuat, this.data.rotSpeed);
+                    if (obj.quaternion.angleTo(this.targetQuat) < 0.01) {
+                        obj.quaternion.copy(this.targetQuat);
+                        this.state = 'moving';
+                    }
+                } else if (this.state === 'moving') {
+                    // Dirección normalizada hacia el objetivo
+                    const direction = new THREE.Vector3().subVectors(this.target, obj.position).normalize();
+                    // Avance constante según velocidad y delta
+                    obj.position.addScaledVector(direction, this.data.speed * (delta / 16.67));
+                    // (delta/16.67) ≈ normalización a 60fps
+
+                    if (obj.position.distanceTo(this.target) < 0.05) {
+                        this.forward = !this.forward;
+                        this.setTarget();
+                    }
+                }
+            }
+        });
+
+        AFRAME.registerComponent('pokemon-text-counter', {
+            schema: {
+                max: { type: 'int', default: 3 } // número total de pokémon a capturar
+            },
+
+            init: function () {
+                // Inicializar el texto en 0/max
+                this.el.setAttribute('troika-text', 'value', `0 / ${this.data.max}`);
+
+                // Escuchar el evento global
+                this.el.sceneEl.addEventListener('pokemonCaptured', (e) => {
+                    const count = e.detail.count;
+                    this.el.setAttribute('troika-text', 'value', `${count} / ${this.data.max}`);
+                });
+            }
+        });
+
+
+        AFRAME.registerComponent('ascensor-system', {
+            schema: {
+                ascensorId: { type: 'string', default: 'ascensor' },
+                cameraId: { type: 'string', default: 'camera' },
+                height: { type: 'number', default: 20 },
+                speed: { type: 'number', default: 3000 }, // ms para subir/bajar
+                doorTravel: { type: 'number', default: 2 }, // distancia que abre la puerta en Z (más grande)
+                doorDur: { type: 'number', default: 1000 }  // ms abrir/cerrar puerta
+            },
+
+            init: function () {
+                this.isMoving = false;
+                this.isUp = false;
+                this.doorMesh = null;
+                this.doorStartZ = null;
+
+                const ascensor = document.querySelector(`#${this.data.ascensorId}`);
+                if (ascensor) {
+                    ascensor.addEventListener('model-loaded', () => {
+                        const mesh = ascensor.getObject3D('mesh');
+                        if (!mesh) return;
+
+                        mesh.traverse((node) => {
+                            if (node.isMesh && node.name === 'PuertaAscensor') {
+                                this.doorMesh = node;
+                                this.doorMesh.matrixAutoUpdate = true;
+                                this.doorStartZ = node.position.z; // guardar posición inicial en Z
+                            }
+                        });
+                    });
+                }
+
+                const botonExterior = document.querySelector('#botonExterior');
+                if (botonExterior) {
+                    botonExterior.addEventListener('click', () => {
+                        if (!this.isMoving) this.openDoor();
+                    });
+                }
+
+                const botonInterior = document.querySelector('#botonInterior');
+                if (botonInterior) {
+                    botonInterior.addEventListener('click', () => {
+                        if (this.isMoving) return;
+                        if (!this.isUp) {
+                            this.closeDoorAndMoveUp();
+                        } else {
+                            this.moveDown();
+                        }
+                    });
+                }
+            },
+
+            animateDoorZ: function (fromZ, toZ, dur, onComplete) {
+                if (!this.doorMesh) return;
+                const start = performance.now();
+                const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+
+                const step = (now) => {
+                    const elapsed = now - start;
+                    const t = Math.min(elapsed / dur, 1);
+                    const k = easeInOutQuad(t);
+                    const z = fromZ + (toZ - fromZ) * k;
+                    this.doorMesh.position.z = z;
+                    this.doorMesh.updateMatrixWorld(true);
+
+                    if (t < 1) {
+                        requestAnimationFrame(step);
+                    } else if (onComplete) {
+                        onComplete();
+                    }
+                };
+
+                requestAnimationFrame(step);
+            },
+
+            openDoor: function () {
+                if (!this.doorMesh || this.doorStartZ === null) return;
+                const to = this.doorStartZ - this.data.doorTravel; // hacia el otro lado
+                this.animateDoorZ(this.doorMesh.position.z, to, this.data.doorDur);
+            },
+
+            closeDoor: function (onClosed) {
+                if (!this.doorMesh || this.doorStartZ === null) { if (onClosed) onClosed(); return; }
+                this.animateDoorZ(this.doorMesh.position.z, this.doorStartZ, this.data.doorDur, onClosed);
+            },
+
+            closeDoorAndMoveUp: function () {
+                this.isMoving = true;
+                this.closeDoor(() => {
+                    const ascensor = document.querySelector(`#${this.data.ascensorId}`);
+                    const camera = document.querySelector(`#${this.data.cameraId}`);
+                    if (!ascensor || !camera) { this.isMoving = false; return; }
+
+                    const ascPos = ascensor.getAttribute('position');
+                    const camPos = camera.getAttribute('position');
+
+                    ascensor.setAttribute('animation__up', {
+                        property: 'position',
+                        to: `${ascPos.x} ${ascPos.y + this.data.height} ${ascPos.z}`,
+                        dur: this.data.speed,
+                        easing: 'easeInOutQuad'
+                    });
+                    camera.setAttribute('animation__up', {
+                        property: 'position',
+                        to: `${camPos.x} ${camPos.y + this.data.height} ${camPos.z}`,
+                        dur: this.data.speed,
+                        easing: 'easeInOutQuad'
+                    });
+
+                    setTimeout(() => {
+                        this.openDoor();
+                        this.isMoving = false;
+                        this.isUp = true;
+                    }, this.data.speed + 100);
+                });
+            },
+
+            moveDown: function () {
+                this.isMoving = true;
+                this.closeDoor(() => {
+                    const ascensor = document.querySelector(`#${this.data.ascensorId}`);
+                    const camera = document.querySelector(`#${this.data.cameraId}`);
+                    if (!ascensor || !camera) { this.isMoving = false; return; }
+
+                    const ascPos = ascensor.getAttribute('position');
+                    const camPos = camera.getAttribute('position');
+
+                    ascensor.setAttribute('animation__down', {
+                        property: 'position',
+                        to: `${ascPos.x} ${ascPos.y - this.data.height} ${ascPos.z}`,
+                        dur: this.data.speed,
+                        easing: 'easeInOutQuad'
+                    });
+                    camera.setAttribute('animation__down', {
+                        property: 'position',
+                        to: `${camPos.x} ${camPos.y - this.data.height} ${camPos.z}`,
+                        dur: this.data.speed,
+                        easing: 'easeInOutQuad'
+                    });
+
+                    setTimeout(() => {
+                        this.openDoor();
+                        this.isMoving = false;
+                        this.isUp = false;
+                    }, this.data.speed + 100);
+                });
+            }
+        });
+
+    </script>
 </head>
 
 <body>
@@ -860,6 +1027,10 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Mesa.glb"></a-asset-item>
             <a-asset-item id="Chikorita"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Chikorita.glb"></a-asset-item>
+            <a-asset-item id="Ascensor"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Ascensor.glb"></a-asset-item>
+            <a-asset-item id="Ho-oh"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Ho-oh2.glb"></a-asset-item>
         </a-assets>
 
         <a-camera id="camera" position="0 1.6 0" look-controls wasd-controls="acceleration: 45">
@@ -871,8 +1042,7 @@
                        color:  #FFD700;
                        outlineColor: #0A1BE0;
                        outlineWidth: .03;
-                       align: left" position="2.5 1.4 -2" rotation="0 0 0"
-                       pokemon-text-counter="max: 3">
+                       align: left" position="2.5 1.4 -2" rotation="0 0 0" pokemon-text-counter="max: 3">
             </a-entity>
         </a-camera>
 
@@ -963,7 +1133,7 @@
                 static-body="shape: hull;" rotar-cartel="speed: 45" encender-ventanas>
             </a-entity>
 
-            <a-entity gltf-model="#Lago" position="13 .25 -100" rotation="0 -90 0" scale="2 2 2"
+            <a-entity gltf-model="#Lago" position="13 .3 -100" rotation="0 -90 0" scale="2 2 2"
                 static-body="shape: hull;">
             </a-entity>
 
@@ -1193,6 +1363,23 @@
         <a-entity gltf-model="#CartelMadera" position="-22 0 -35" rotation="0 0 0" scale="2.5 2.5 2.5"
             static-body="shape: box">
         </a-entity>
+
+        <!-- Ascensor -->
+        <a-entity id="ascensor" gltf-model="#Ascensor" position="-2.45 0 36.5" rotation="0 -90 0" scale="1 1 1.3"
+            static-body="shape: box" debug-nodos>
+            <!-- Botón interior -->
+            <a-box id="botonInterior" position="0 1 -1" depth="0.2" height="0.3" width="0.3"
+                material="color: blue; emissive: blue; emissiveIntensity: 1" class="clickable"></a-box>
+        </a-entity>
+
+        <!-- Botón exterior -->
+        <a-box id="botonExterior" position="-4 1.5 35" depth="0.2" height="0.3" width="0.3"
+            material="color: red; emissive: red; emissiveIntensity: 1" class="clickable"></a-box>
+
+
+        <!-- Activar el sistema -->
+        <a-entity
+            ascensor-system="ascensorId: ascensor; cameraId: camera; height: 65; speed: 3000; doorTravel: 2; doorDur: 1000"></a-entity>
         <!-- Cesped -->
         <a-entity id="Cesped">
             <!-- Cesped atras -->
@@ -1416,6 +1603,7 @@
                 capture-sound="Music/Cries-Chikorita.mp3"
                 animation-mixer="clip: RunChikorita; loop: repeat; timeScale: 2">
             </a-entity>
+
         </a-entity>
         <!-- Boton subida TODO: Implementar-->
         <a-entity id="testButton" geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.1" position="-7.5 2 14"
@@ -1425,7 +1613,18 @@
         </a-entity>
 
         <!-- Botón -->
-        <a-box position="0 1 -2" depth="0.2" height="0.2" width="0.2" color="#333" class="clickable" boton-luces>
+        <a-box position="-5 67 36" depth="0.2" height="0.2" width="0.2"
+            material="color: green; emissive: green; emissiveIntensity: 1" class="clickable" boton-luces>
+            <a-box position="0 0 .2" depth="0.2" height="0.4" width="0.4"
+                material="color: black; emissive: black;"></a-box>
+            <a-entity troika-text="value: Hacer de noche;
+                       font: Fonts/Pokemon-Solid.ttf;
+                       fontSize: .2;
+                       color:  #FFD700;
+                       outlineColor: #0A1BE0;
+                       outlineWidth: .03;
+                       align: left" position="0 1 0" rotation="0 180 0">
+            </a-entity>
         </a-box>
 
         <!-- Suelo Collider -->

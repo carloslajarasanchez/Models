@@ -1,11 +1,11 @@
 <html>
-
 <head>
     <link rel="icon" type="image/png" href="/Png/icon.png">
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-troika-text/dist/aframe-troika-text.min.js"></script>
     <script
         src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
+         <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
     <script>
         AFRAME.registerComponent('animate-ground-frequency', {
             schema: {
@@ -34,27 +34,21 @@
                 this.el.setAttribute('environment', 'groundDensity', this.value);
             }
         });
-
     </script>
-
-
-
 </head>
 
 <body>
     <a-scene>
-
         <!-- Assets -->
         <a-assets>
             <a-asset-item id="Torre"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Torre.glb"></a-asset-item>
             <a-asset-item id="Ho-oh"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Ho-oh2.glb"></a-asset-item>
-            
         </a-assets>
 
         <!-- Cámara para ver el menú -->
-        <a-entity position="0 1.6 3">
+        <a-entity position="0 1.6 10">
             <a-camera>
                 <a-cursor></a-cursor>
             </a-camera>
@@ -66,7 +60,7 @@
                   lighting: sunset;
                   lightPosition: 0 0 1;
                   seed: 1;
-                  fog: .5;
+                  fog: .4;
                   shadow: true;
                   skyType: color;
                   skyColor: #88ccee;
@@ -76,14 +70,14 @@
                   groundColor: #FFFFFF;
                   groundYScale: 5;
                   groundColor2: #FAFFFF;
-                  groundFrequency: 110;
-                  groundDensity: 65;
-                  stageSize: 300;
+                  groundFrequency: 10;
+                  groundDensity: 33;
+                  stageSize: 100;
                   playArea: .7;
                   grid: none;
-                  " animate-ground-frequency="min: 100; max: 100.9; speed: .01s">
+                  " >
+                  <!-- animate-ground-frequency="min: 100; max: 100.9; speed: .01s"-->
         </a-entity>
-
 
         <!-- Texto del título -->
         <a-entity troika-text="value: Pokemon Oro \n Ciudad Iris Tour;
@@ -115,34 +109,26 @@
         </a-entity>
 
         <!-- Ho-oh -->
-        <a-entity id="Hooh" gltf-model="#Ho-oh"  position="0 10 -20"
-            scale=".1 .1 .1" animation-mixer="clip: Take 001; loop: repeat">
+        <a-entity id="Hooh" gltf-model="#Ho-oh" position="0 15 -15s" scale=".2 .2 .2"
+            animation-mixer="clip: Take 001; loop: repeat">
         </a-entity>
-
-
         <!-- Música de fondo -->
         <audio id="testAudio" src="Music/PokemonHeartGold-Intro.mp3" loop></audio>
-
-
     </a-scene>
-
     <script>
         // Al hacer click en el botón, redirige al otro HTML
         document.querySelector('#btnJugar').addEventListener('click', () => {
             window.location.href = "indexPruebas2.html"; // ← tu archivo del juego
         });
-    </script>
-    <script>
+    
         document.addEventListener('click', () => {
             document.getElementById('testAudio').play();
         });
-    </script>
-    <script>
+    
         const hooh = document.querySelector('[gltf-model="#Ho-oh"]');
         hooh.addEventListener('model-loaded', () => {
             console.log("✅ Modelo Ho-oh cargado");
         });
-
     </script>
 
 </body>
