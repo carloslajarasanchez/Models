@@ -761,6 +761,12 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Totodile.glb"></a-asset-item>
             <a-asset-item id="cyndaquil"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/cyndaquil.glb"></a-asset-item>
+            <a-asset-item id="EstructuraPuerta"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/EstructuraPuerta.glb"></a-asset-item>
+            <a-asset-item id="PuertaIzq"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/PuertaIzq.glb"></a-asset-item>
+            <a-asset-item id="PuertaDer"
+                src="https://carloslajarasanchez.github.io/Models/PokemonGLT/PuertaDer.glb"></a-asset-item>
         </a-assets>
 
         <!-- Player -->
@@ -794,8 +800,10 @@
                   ">
         </a-entity>
         <!-- Particulas -->
-        <a-entity position="-30 0 -0" particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:1000; size: .5; type: 1"></a-entity>
-        <a-entity position="-30 0 -70" particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:1000; size: .5; type: 1"></a-entity>
+        <a-entity position="-30 0 -0"
+            particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:1000; size: .5; type: 1"></a-entity>
+        <a-entity position="-30 0 -70"
+            particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:1000; size: .5; type: 1"></a-entity>
         <!--<a-entity position="0 0 -0" particle-system="preset: dust; color: #EF0000,#44CC00; particleCount:2000"></a-entity>-->
         <!-- Audio -->
         <audio id="testAudio" src="Music/Ciudad-Iris.mp3" loop></audio>
@@ -867,6 +875,15 @@
             <a-entity gltf-model="#Mountain" position="15 .25 -200" rotation="0 -90 0" scale="10 10 10">
             </a-entity>
             <a-entity gltf-model="#Torre" position="-2.5 0 40" rotation="0 90 0" scale="2 2 2" encender-ventanas
+                static-body="shape: hull;">
+            </a-entity>
+            <a-entity gltf-model="#EstructuraPuerta" position="-2.5 0 15" rotation="0 90 0" scale="2 1.8 2" encender-ventanas
+                static-body="shape: hull;">
+            </a-entity>
+            <a-entity gltf-model="#PuertaDer" position="-2.5 0 15" rotation="0 90 0" scale="2 1.8 2" encender-ventanas
+                static-body="shape: hull;">
+            </a-entity>
+            <a-entity gltf-model="#PuertaIzq" position="-2.5 0 15" rotation="0 90 0" scale="2 1.8 2" encender-ventanas
                 static-body="shape: hull;">
             </a-entity>
         </a-entity>
@@ -1267,7 +1284,7 @@
         <a-entity id="Pokemons">
             <a-entity id="totodile" gltf-model="#totodile" static-body scale=".07 .07 .07" class="pokemon"
                 position="0 0 -85" pingpong-move-smooth="start: 0 0 -85; end: 10 0 -75; speed: 0.1; rotSpeed: 0.02"
-                capture-sound="Music/Cries-Totodile.mp3" >
+                capture-sound="Music/Cries-Totodile.mp3">
             </a-entity>
 
             <a-entity id="cyndaquil" gltf-model="#cyndaquil" static-body scale="7 7 7" class="pokemon"
