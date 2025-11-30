@@ -328,6 +328,7 @@
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/Totodile.glb"></a-asset-item>
             <a-asset-item id="cyndaquil"
                 src="https://carloslajarasanchez.github.io/Models/PokemonGLT/cyndaquil.glb"></a-asset-item>
+                 <a-asset-item id="Gym" src="https://carloslajarasanchez.github.io/Models/PokemonGLT/GYM.glb"></a-asset-item>
         </a-assets>
         <a-camera id="camera" position="0 1.6 0" look-controls>
             <a-entity id="hand-slot" position="0 -0.2 -1"></a-entity>
@@ -362,7 +363,7 @@
             visible="false" static-body></a-box>
 
         <a-entity id="pokeball" gltf-model="#pokeball" dynamic-body="mass: 1; shape: sphere" grabbable class="clickable"
-            position="0 1 -2" rotation="0 90 0" pokeball-logic="stopDelay:3000; pokemonDisappearDelay:1500"
+            position="0 1 -2" rotation="0 90 0" pokeball-logic="stopDelay:3000; pokemonDisappearDelay:1500;"
             damping="linear: .2; angular: 1">
         </a-entity>
 
@@ -379,6 +380,10 @@
 
         <a-entity id="testButton" geometry="primitive: box; width: 0.5; height: 0.2; depth: 0.1" position="0 1 5"
             unlock-button></a-entity>
+
+            <a-entity gltf-model="#Gym" position="-70 0 -15" rotation="0 -90 0" scale="1.7 2 2"
+                static-body="shape: hull;" encender-ventanas>
+            </a-entity>
 
     </a-scene>
 
